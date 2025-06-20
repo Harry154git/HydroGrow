@@ -1,0 +1,65 @@
+<resources>
+    <string name="app_name">HydroGrow</string>
+
+    <string name="hydroponic">Kebun Hidroponik</string>
+    <string name="your_plant">Tanaman Kamu</string>
+    <string name="welcome">Selamat Datang, </string>
+    <string name="make_hydroponic">Buat lagi</string>
+    <string name="news">Berita terbaru</string>
+    <string name="more_news">lebih banyak</string>
+
+
+
+
+    <string name="user_email">admin@gmail.com</string>
+    <string name="user_password">password1234</string>
+    <string name="user_name">Budi</string>
+    <string name="user_phone">086127476</string>
+    <string name="user_address">Jl. pemuda No. 1, Jakarta</string>
+    <string name="idgarden3">2</string>
+
+    <string name="idgarden4">2</string>
+    <string name="garden_name">Kebun B</string>
+    <string name="garden_size">30.0</string>
+    <string name="planted_plant">lettuce</string>
+    <string name="garden_hydroponic_type">DWC (Deep Water Culture)</string>
+
+    <string name="plant2_type">Spinach</string>
+    <string name="plant2_nutrients">Nutrient C</string>
+    <string name="plant2_harvest_time">25 days</string>
+
+    <string name="plant3_type">Kale</string>
+    <string name="plant3_nutrients">Nutrient D</string>
+    <string name="plant3_harvest_time">40 days</string>
+
+
+
+
+
+    <string name="user_email1">harry@gmail.com</string>
+    <string name="user_password1">123456</string>
+    <string name="user_name1">harry</string>
+    <string name="user_phone1">0153632</string>
+    <string name="user_address1">Jl. kebenaran No. 1, Jakarta</string>
+    <string name="idgarden0">1</string>
+
+    <string name="idgarden1">1</string>
+    <string name="garden1_name">Kebun A</string>
+    <string name="garden1_size">50.0</string>
+    <string name="garden1_hydroponic_type">NFT (Nutrient Film Technique)</string>
+
+    <string name="plant1_type">Lettuce</string>
+    <string name="plant1_nutrients">Nutrient A + Nutrient B</string>
+    <string name="plant1_harvest_time">30 days</string>
+
+
+
+
+    <string name="news1_title">Melon Hidroponik Jadi Magnet Baru Pertanian Inovatif Sidoarjo</string>
+    <string name="news1_link">https://infopublik.id/kategori/nusantara/919066/melon-hidroponik-jadi-magnet-baru-pertanian-inovatif-sidoarjo</string>
+    <string name="news2_title">Bumdes Apriseasi program ketahanan pangan</string>
+    <string name="news2_link">https://kabar1news.com/bhabinkamtibmas-desa-sumorame-galakkan-tanaman-hidroponik/</string>
+
+
+
+</resources>
