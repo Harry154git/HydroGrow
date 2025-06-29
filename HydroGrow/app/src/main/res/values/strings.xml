@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Hydro Grow</string>
+
+    <string name="hydroponic">Kebun Hidroponik</string>
+    <string name="your_plant">Tanaman Kamu</string>
+    <string name="welcome">Selamat Datang, </string>
+    <string name="make_hydroponic">Buat lagi</string>
+    <string name="news">Berita terbaru</string>
+    <string name="more_news">lebih banyak</string>
+</resources>

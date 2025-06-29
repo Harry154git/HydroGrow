@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "838621209796",
+    "project_id": "hydro-grow",
+    "storage_bucket": "hydro-grow.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:838621209796:android:37d64011b03afe2bfb1591",
+        "android_client_info": {
+          "package_name": "com.pemrogamanmobile.hydrogrow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuQqVENcDCzyBnj8M9rB6CjYiwx7vlC_Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
