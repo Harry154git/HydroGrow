@@ -16,5 +16,14 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val dark by viewModel.darkMode.collectAsState(initial = false)
     val lang by viewModel.language.collectAsState(initial = false)
 
-
+    Button(
+        onClick = {
+            throw RuntimeException("Test Crash") // Force a crash
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Text("Test Crash")
+    }
 }

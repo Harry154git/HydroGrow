@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
@@ -26,14 +27,26 @@ fun EditScreen(
     plantId: String
 ) {
     val state = viewModel.uiState
-    var isEditing by remember { mutableStateOf(false) }
+    var isEditing by rememberSaveable { mutableStateOf(false) }
+
+    // Local fields for edit
+    var localPlantName by rememberSaveable { mutableStateOf("") }
+    var localNutrients by rememberSaveable { mutableStateOf("") }
+    var localHarvestTime by rememberSaveable { mutableStateOf("") }
+    var isInitialized by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(plantId) {
         viewModel.loadPlant(plantId)
     }
 
+    if (!isInitialized && !state.isLoading) {
+        localPlantName = state.plantName
+        localNutrients = state.nutrientsUsed
+        localHarvestTime = state.harvestTime
+        isInitialized = true
+    }
+
     if (state.isSuccess) {
-        // Jika sukses update / delete, kembali
         LaunchedEffect(true) {
             navController.popBackStack()
         }
@@ -78,9 +91,23 @@ fun EditScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        InfoRow("Nama Tanaman:", state.plantName, isEditing) { viewModel.onPlantNameChange(it) }
-        InfoRow("Nutrisi:", state.nutrientsUsed, isEditing) { viewModel.onNutrientsUsedChange(it) }
-        InfoRow("Masa Panen:", state.harvestTime, isEditing) { viewModel.onHarvestTimeChange(it) }
+        InfoRow(
+            "Nama Tanaman:",
+            if (isEditing) localPlantName else state.plantName,
+            isEditing
+        ) { localPlantName = it }
+
+        InfoRow(
+            "Nutrisi:",
+            if (isEditing) localNutrients else state.nutrientsUsed,
+            isEditing
+        ) { localNutrients = it }
+
+        InfoRow(
+            "Masa Panen:",
+            if (isEditing) localHarvestTime else state.harvestTime,
+            isEditing
+        ) { localHarvestTime = it }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -88,12 +115,24 @@ fun EditScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(onClick = { isEditing = !isEditing }) {
+            Button(onClick = {
+                if (!isEditing) {
+                    // Saat masuk ke mode edit, ambil data dari state
+                    localPlantName = state.plantName
+                    localNutrients = state.nutrientsUsed
+                    localHarvestTime = state.harvestTime
+                }
+                isEditing = !isEditing
+            }) {
                 Text(if (isEditing) "Batal" else "Edit")
             }
 
             if (isEditing) {
                 Button(onClick = {
+                    viewModel.onPlantNameChange(localPlantName)
+                    viewModel.onNutrientsUsedChange(localNutrients)
+                    viewModel.onHarvestTimeChange(localHarvestTime)
+
                     viewModel.updatePlant()
                     navController.popBackStack()
                 }) {
@@ -104,7 +143,6 @@ fun EditScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Tombol hapus
         Button(
             onClick = { viewModel.deletePlant() },
             colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
@@ -136,4 +174,3 @@ fun InfoRow(label: String, value: String, isEditing: Boolean, onValueChange: (St
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
-

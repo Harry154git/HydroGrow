@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.profilpage.ProfileViewModel
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.Color
 import com.pemrogamanmobile.hydrogrow.R
 
@@ -28,19 +29,22 @@ fun ProfileScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
 
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var phone by rememberSaveable { mutableStateOf("") }
+    var address by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var isInitialized by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(state.user) {
-        state.user?.let { user ->
+        val user = state.user
+        if (user != null && !isInitialized) {
             name = user.name
             email = user.email
             phone = user.phone
             address = user.address
             password = user.password
+            isInitialized = true
         }
     }
 
@@ -136,13 +140,14 @@ fun ProfileScreen(
 
             Button(
                 onClick = {
-                    val updatedUser = state.user?.copy(
-                        name = name,
-                        phone = phone,
-                        address = address,
-                        password = password
-                    )
-                    if (updatedUser != null) {
+                    val user = state.user
+                    if (user != null) {
+                        val updatedUser = user.copy(
+                            name = name,
+                            phone = phone,
+                            address = address,
+                            password = password
+                        )
                         viewModel.updateProfile(updatedUser)
                     }
                 },
@@ -181,4 +186,3 @@ fun ProfileScreen(
         }
     }
 }
-

@@ -63,7 +63,10 @@ fun HomeScreen(
                 ProfileCard(
                     photoUrl = user.photoUrl,
                     name = user.name,
-                    onProfileClick = navigateToProfile
+                    onProfileClick = {
+                        viewModel.logViewProfile()
+                        navigateToProfile()
+                    }
                 )
             }
         }

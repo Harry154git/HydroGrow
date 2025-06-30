@@ -1,5 +1,6 @@
 package com.pemrogamanmobile.hydrogrow.presentation.ui.screen.plantpage
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -10,7 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.plantpage.AddPlantViewModel
-import android.util.Log
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,10 +23,12 @@ fun AddPlantScreen(
 ) {
     val state = viewModel.uiState
     var expanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
         Row(
@@ -102,7 +107,9 @@ fun AddPlantScreen(
             onClick = {
                 viewModel.savePlant(
                     onSuccess = { onBack() },
-                    onError = { /* TODO: tampilkan snackbar atau toast */ }
+                    onError = { message ->
+                        Toast.makeText(context, message ?: "Terjadi kesalahan", Toast.LENGTH_LONG).show()
+                    }
                 )
             },
             enabled = !state.isLoading,
@@ -112,4 +119,5 @@ fun AddPlantScreen(
         }
     }
 }
+
 

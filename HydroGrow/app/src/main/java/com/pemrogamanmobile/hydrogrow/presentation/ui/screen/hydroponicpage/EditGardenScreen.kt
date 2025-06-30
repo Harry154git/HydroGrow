@@ -1,14 +1,12 @@
 package com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage
 
-import android.net.Uri
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,9 +17,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.hydroponicpage.EditGardenViewModel
-import androidx.compose.foundation.Image
-import coil.compose.rememberAsyncImagePainter
-import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun EditGardenScreen(
@@ -33,7 +28,6 @@ fun EditGardenScreen(
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
-    // Toast untuk error
     LaunchedEffect(uiState.error) {
         if (uiState.error != null && uiState.garden != null) {
             Toast.makeText(context, "Error: ${uiState.error}", Toast.LENGTH_LONG).show()
@@ -41,7 +35,6 @@ fun EditGardenScreen(
         }
     }
 
-    // Load garden pertama kali
     LaunchedEffect(gardenId) {
         viewModel.loadGarden(gardenId)
     }
@@ -69,12 +62,21 @@ fun EditGardenScreen(
         return
     }
 
-    var editableKebun by remember { mutableStateOf(kebun) }
-    var isEditing by remember { mutableStateOf(false) }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    // ✅ Local value yang survive rotasi
+    var localName by rememberSaveable { mutableStateOf("") }
+    var localSize by rememberSaveable { mutableStateOf("") }
+    var localType by rememberSaveable { mutableStateOf("") }
+    var isEditing by rememberSaveable { mutableStateOf(false) }
+    var isInitialized by rememberSaveable { mutableStateOf(false) }
 
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        imageUri = uri
+    // ✅ Inisialisasi hanya sekali
+    LaunchedEffect(Unit) {
+        if (!isInitialized) {
+            localName = kebun.name
+            localSize = kebun.size.toString()
+            localType = kebun.hydroponicType
+            isInitialized = true
+        }
     }
 
     Column(
@@ -100,15 +102,23 @@ fun EditGardenScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        InfoRow("Nama Kebun:", editableKebun.name, isEditing) {
-            editableKebun = editableKebun.copy(name = it)
-        }
-        InfoRow("Luas Kebun (m²):", editableKebun.size.toString(), isEditing) {
-            editableKebun = editableKebun.copy(size = it.toDoubleOrNull() ?: editableKebun.size)
-        }
-        InfoRow("Tipe Hidroponik:", editableKebun.hydroponicType, isEditing) {
-            editableKebun = editableKebun.copy(hydroponicType = it)
-        }
+        InfoRow(
+            "Nama Kebun:",
+            if (isEditing) localName else kebun.name,
+            isEditing
+        ) { localName = it }
+
+        InfoRow(
+            "Luas Kebun (m²):",
+            if (isEditing) localSize else kebun.size.toString(),
+            isEditing
+        ) { localSize = it }
+
+        InfoRow(
+            "Tipe Hidroponik:",
+            if (isEditing) localType else kebun.hydroponicType,
+            isEditing
+        ) { localType = it }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -117,20 +127,35 @@ fun EditGardenScreen(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(
-                onClick = { isEditing = true },
+                onClick = {
+                    if (!isEditing) {
+                        localName = kebun.name
+                        localSize = kebun.size.toString()
+                        localType = kebun.hydroponicType
+                    }
+                    isEditing = !isEditing
+                },
                 modifier = Modifier.weight(1f).padding(end = 4.dp)
             ) {
-                Text("Edit")
+                Text(if (isEditing) "Batal" else "Edit")
             }
-            Button(
-                onClick = {
-                    viewModel.updateGarden(editableKebun)
-                    isEditing = false
-                    navController.popBackStack()
-                },
-                modifier = Modifier.weight(1f).padding(start = 4.dp)
-            ) {
-                Text("Simpan")
+
+            if (isEditing) {
+                Button(
+                    onClick = {
+                        val updatedGarden = kebun.copy(
+                            name = localName,
+                            size = localSize.toDoubleOrNull() ?: kebun.size,
+                            hydroponicType = localType
+                        )
+                        viewModel.updateGarden(updatedGarden)
+                        isEditing = false
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier.weight(1f).padding(start = 4.dp)
+                ) {
+                    Text("Simpan")
+                }
             }
         }
 
@@ -138,7 +163,7 @@ fun EditGardenScreen(
 
         Button(
             onClick = {
-                viewModel.deleteGarden(editableKebun)
+                viewModel.deleteGarden(kebun)
                 navController.popBackStack()
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color.Red),

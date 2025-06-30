@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.loginorregisterpage.LoginViewModel
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun LoginScreen(
@@ -34,6 +36,7 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally

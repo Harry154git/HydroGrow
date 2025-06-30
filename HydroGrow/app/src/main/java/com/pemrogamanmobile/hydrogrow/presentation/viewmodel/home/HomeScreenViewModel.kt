@@ -13,9 +13,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.coroutineScope
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
+import androidx.core.os.bundleOf
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -27,12 +30,27 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private val firebaseAnalytics = Firebase.analytics
+
     init {
         loadData()
     }
 
     fun refresh() {
         loadData()
+    }
+
+    fun logViewProfile() {
+        firebaseAnalytics.logEvent("view_profile", bundleOf(
+            "source" to "home_screen"
+        ))
+    }
+
+    // Kalau kamu mau pakai event login, contoh:
+    fun logLogin() {
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundleOf(
+            "method" to "profile_click"
+        ))
     }
 
     private fun loadData() {

@@ -30,6 +30,8 @@ foundationAndroid = "1.7.2"
 hiltCommon = "1.2.0"
 hiltWork = "1.2.0"
 firebaseStorageKtx = "21.0.2"
+firebaseCrashlytics = "19.4.4"
+googleFirebaseCrashlytics = "3.0.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -73,6 +75,7 @@ androidx-foundation-android = { group = "androidx.compose.foundation", name = "f
 androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
 androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics", version.ref = "firebaseCrashlytics" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -81,4 +84,5 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version = "1.9.10" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version = "1.9.22" }
 hilt = { id = "com.google.dagger.hilt.android", version = "2.50" }
+google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleFirebaseCrashlytics" }
 

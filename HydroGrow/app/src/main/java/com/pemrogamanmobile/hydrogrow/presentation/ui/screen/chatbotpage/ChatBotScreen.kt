@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -20,7 +21,7 @@ import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.chatbotpage.Message
 
 @Composable
 fun ChatBotScreen(navController: NavController, viewModel: ChatBotScreenViewModel = hiltViewModel()) {
-    var userInput by remember { mutableStateOf("") }
+    var userInput by rememberSaveable { mutableStateOf("") }
     val messages = viewModel.messages
 
     Column(
@@ -69,7 +70,6 @@ fun ChatBotScreen(navController: NavController, viewModel: ChatBotScreenViewMode
         }
     }
 }
-
 
 @Composable
 fun ChatBubble(message: Message) {

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     id("com.google.gms.google-services")
+    alias(libs.plugins.google.firebase.crashlytics)
 }
 
 android {
@@ -67,6 +68,7 @@ dependencies {
     implementation(libs.androidx.foundation.android)
     implementation(libs.androidx.foundation.android)
     implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.crashlytics)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
