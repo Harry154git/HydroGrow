@@ -46,7 +46,6 @@ class HomeViewModel @Inject constructor(
         ))
     }
 
-    // Kalau kamu mau pakai event login, contoh:
     fun logLogin() {
         firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundleOf(
             "method" to "profile_click"
