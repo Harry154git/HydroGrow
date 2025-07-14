@@ -11,7 +11,6 @@ import com.pemrogamanmobile.hydrogrow.data.local.room.dao.GardenDao
 import com.pemrogamanmobile.hydrogrow.data.local.room.dao.PlantDao
 import com.pemrogamanmobile.hydrogrow.data.local.room.dao.UserDao
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.AuthService
-import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.FirestoreService
 import com.pemrogamanmobile.hydrogrow.data.remote.service.gemini.GeminiApiClient
 import com.pemrogamanmobile.hydrogrow.data.remote.service.gemini.GeminiApiService
 import com.pemrogamanmobile.hydrogrow.domain.repository.GardenRepository

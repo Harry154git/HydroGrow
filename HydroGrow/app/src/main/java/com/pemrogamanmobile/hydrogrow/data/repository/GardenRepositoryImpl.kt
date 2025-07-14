@@ -7,8 +7,8 @@ import com.pemrogamanmobile.hydrogrow.data.local.mapper.toEntity
 import com.pemrogamanmobile.hydrogrow.data.remote.mapper.toDomain
 import com.pemrogamanmobile.hydrogrow.data.remote.mapper.toDto
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.AuthService
-import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.FirestoreService
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.ImageUploader
+import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.GardenService
 import com.pemrogamanmobile.hydrogrow.domain.model.Garden
 import com.pemrogamanmobile.hydrogrow.domain.repository.GardenRepository
 import kotlinx.coroutines.flow.Flow
@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.emitAll
 
 class GardenRepositoryImpl @Inject constructor(
     private val dao: GardenDao,
-    private val firestore: FirestoreService,
+    private val firestore: GardenService,
     private val authService: AuthService,
     private val imageUploader: ImageUploader
 ) : GardenRepository {

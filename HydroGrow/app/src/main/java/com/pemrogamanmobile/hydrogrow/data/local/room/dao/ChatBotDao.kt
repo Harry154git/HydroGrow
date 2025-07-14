@@ -19,7 +19,7 @@ interface ChatBotDao {
     @Query("SELECT * FROM chatbot WHERE id = :chatbotId LIMIT 1")
     suspend fun getChatBotById(chatbotId: String): ChatBotEntity?
 
-    @Query("SELECT * FROM chatbot WHERE userOwnerId = :userId")
+    @Query("SELECT * FROM chatbot WHERE user_owner_id = :userId")
     fun getChatBotByUserId(userId: String): Flow<List<ChatBotEntity>>
 
     @Query("DELETE FROM chatbot")

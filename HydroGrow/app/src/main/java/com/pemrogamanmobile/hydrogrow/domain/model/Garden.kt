@@ -6,5 +6,5 @@ data class Garden(
     val gardenSize: Double,
     val hydroponicType: String,
     val userOwnerId: String,
-    val imageUrl: String? = null
+    val imageUrl: String?
 )

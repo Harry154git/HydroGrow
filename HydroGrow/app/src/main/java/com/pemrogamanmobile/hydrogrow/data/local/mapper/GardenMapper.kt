@@ -8,7 +8,8 @@ fun GardenEntity.toDomain(): Garden = Garden(
     gardenName = gardenName,
     gardenSize = gardenSize,
     hydroponicType = hydroponicType,
-    userOwnerId = userOwnerId
+    userOwnerId = userOwnerId,
+    imageUrl = imageUrl
 )
 
 fun Garden.toEntity(): GardenEntity = GardenEntity(
@@ -16,7 +17,8 @@ fun Garden.toEntity(): GardenEntity = GardenEntity(
     gardenName = gardenName,
     gardenSize = gardenSize,
     hydroponicType = hydroponicType,
-    userOwnerId = userOwnerId
+    userOwnerId = userOwnerId,
+    imageUrl = imageUrl
 )
 
 fun List<GardenEntity>.toDomainList(): List<Garden> = map { it.toDomain() }

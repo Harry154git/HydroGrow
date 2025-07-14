@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewModelScope
 import com.pemrogamanmobile.hydrogrow.domain.model.Garden
-import com.pemrogamanmobile.hydrogrow.domain.usecase.AnalyzeDataUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.geminiai.AnalyzeDataUseCase
 import com.pemrogamanmobile.hydrogrow.domain.usecase.GardenUseCase
 import com.pemrogamanmobile.hydrogrow.domain.usecase.UserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel

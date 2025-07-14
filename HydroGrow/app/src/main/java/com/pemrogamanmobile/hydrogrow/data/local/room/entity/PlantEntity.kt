@@ -9,4 +9,5 @@ data class PlantEntity(
     val plantName: String,
     val harvestTime: String,
     val gardenOwnerId: String,
+    val imageUrl: String?
 )

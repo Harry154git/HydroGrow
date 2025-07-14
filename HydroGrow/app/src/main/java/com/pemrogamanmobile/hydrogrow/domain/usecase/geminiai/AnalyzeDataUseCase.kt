@@ -1,4 +1,4 @@
-package com.pemrogamanmobile.hydrogrow.domain.usecase
+package com.pemrogamanmobile.hydrogrow.domain.usecase.geminiai
 
 import com.pemrogamanmobile.hydrogrow.domain.repository.GeminiRepository
 import javax.inject.Inject

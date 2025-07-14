@@ -6,17 +6,17 @@ import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PlantEntity
 fun PlantEntity.toDomain(): Plant = Plant(
     id = id,
     plantName = plantName,
-    nutrientsUsed = nutrientsUsed,
     harvestTime = harvestTime,
-    gardenOwnerId = gardenOwnerId
+    gardenOwnerId = gardenOwnerId,
+    imageUrl = imageUrl
 )
 
 fun Plant.toEntity(): PlantEntity = PlantEntity(
     id = id,
     plantName = plantName,
-    nutrientsUsed = nutrientsUsed,
     harvestTime = harvestTime,
-    gardenOwnerId = gardenOwnerId
+    gardenOwnerId = gardenOwnerId,
+    imageUrl = imageUrl
 )
 
 fun List<PlantEntity>.toDomainList(): List<Plant> = map { it.toDomain() }

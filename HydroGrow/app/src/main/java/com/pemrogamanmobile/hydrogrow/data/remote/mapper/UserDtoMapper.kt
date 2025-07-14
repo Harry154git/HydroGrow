@@ -7,9 +7,8 @@ fun UserDto.toDomain(): User = User(
     id = id,
     email = email,
     password = password,
-    name = name,
-    phonenumber = phonenumber,
-    address = address,
+    username = username,
+    nickname = nickname,
     photourl = photourl
 )
 
@@ -17,9 +16,8 @@ fun User.toDto(): UserDto = UserDto(
     id = id,
     email = email,
     password = password,
-    name = name,
-    phonenumber = phonenumber,
-    address = address,
+    username = username,
+    nickname = nickname,
     photourl = photourl
 )
 

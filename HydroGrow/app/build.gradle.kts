@@ -116,8 +116,8 @@ dependencies {
 
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-    implementation ("androidx.work:work-runtime-ktx:2.10.2") // ← WAJIB! (atau versi terbaru)
-    implementation ("androidx.hilt:hilt-work:1.2.0")        // untuk Worker pakai Hilt
+    implementation ("androidx.work:work-runtime-ktx:2.10.2")
+    implementation ("androidx.hilt:hilt-work:1.2.0")
     kapt ("androidx.hilt:hilt-compiler:1.2.0")
 
 }

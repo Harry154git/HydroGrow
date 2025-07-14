@@ -2,10 +2,20 @@ package com.pemrogamanmobile.hydrogrow.data.local.room.dao
 
 import androidx.room.*
 import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PostingEntity
+import androidx.room.Transaction
+import com.pemrogamanmobile.hydrogrow.data.local.room.relation.PostingWithComments
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PostingDao {
+
+    @Transaction // Penting untuk memastikan operasi query berjalan konsisten
+    @Query("SELECT * FROM posting WHERE id = :postId")
+    fun getPostingWithComments(postId: String): Flow<PostingWithComments>
+
+    @Transaction
+    @Query("SELECT * FROM posting ORDER BY createdAt DESC")
+    fun getAllPostingsWithComments(): Flow<List<PostingWithComments>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPosting(posting: PostingEntity)

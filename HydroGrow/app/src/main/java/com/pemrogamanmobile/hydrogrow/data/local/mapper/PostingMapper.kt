@@ -1,40 +1,40 @@
 package com.pemrogamanmobile.hydrogrow.data.local.mapper
 
 import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PostingEntity
+import com.pemrogamanmobile.hydrogrow.data.local.room.relation.PostingWithComments
 import com.pemrogamanmobile.hydrogrow.domain.model.Posting
 
 /**
- * Converts a PostingEntity (from the database) to a Posting (domain model).
+ * Mengubah objek relasi dari database menjadi objek domain yang bersih.
  */
-fun PostingEntity.toDomain(): Posting = Posting(
-    id = this.id,
-    userOwnerId = this.userOwnerId,
-    comment = this.comment,
-    imageUrl = this.imageUrl,
-    likes = this.likes,
-    createdAt = this.createdAt,
-    updatedAt = this.updatedAt
+fun PostingWithComments.toDomain(): Posting = Posting(
+    id = posting.id,
+    userOwnerId = posting.userOwnerId,
+    userOwnerName = posting.userOwnerName,
+    userOwnerProfileUrl = posting.userOwnerProfileUrl,
+    imageUrl = posting.imageUrl,
+    likes = posting.likes,
+    comments = comments.toDomain(), // Memanggil mapper komentar di sini
+    createdAt = posting.createdAt,
+    updatedAt = posting.updatedAt
 )
 
 /**
- * Converts a Posting (domain model) to a PostingEntity (for the database).
+ * Mengubah daftar objek relasi menjadi daftar objek domain.
+ */
+fun List<PostingWithComments>.toDomain(): List<Posting> = map { it.toDomain() }
+
+/**
+ * Mengubah objek domain menjadi entitas postingan (tanpa komentar).
+ * Berguna saat menyimpan postingan ke database. Komentar disimpan terpisah.
  */
 fun Posting.toEntity(): PostingEntity = PostingEntity(
-    id = this.id,
-    userOwnerId = this.userOwnerId,
-    comment = this.comment,
-    imageUrl = this.imageUrl,
-    likes = this.likes,
-    createdAt = this.createdAt, // Preserves the original creation timestamp
-    updatedAt = System.currentTimeMillis() // Sets the update timestamp to now
+    id = id,
+    userOwnerId = userOwnerId,
+    userOwnerName = userOwnerName,
+    userOwnerProfileUrl = userOwnerProfileUrl,
+    imageUrl = imageUrl,
+    likes = likes,
+    createdAt = createdAt,
+    updatedAt = updatedAt
 )
-
-/**
- * Converts a list of PostingEntity objects to a list of Posting domain models.
- */
-fun List<PostingEntity>.toDomainList(): List<Posting> = map { it.toDomain() }
-
-/**
- * Converts a list of Posting domain models to a list of PostingEntity objects.
- */
-fun List<Posting>.toEntityList(): List<PostingEntity> = map { it.toEntity() }

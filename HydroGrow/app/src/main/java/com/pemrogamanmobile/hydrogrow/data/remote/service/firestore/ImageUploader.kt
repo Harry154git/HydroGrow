@@ -11,8 +11,6 @@ import android.util.Log
 class ImageUploader @Inject constructor() {
 
     suspend fun uploadImageToStorage(uri: Uri): String {
-        // 👇 Tambahkan log ini di sini
-        Log.d("ImageUploader", "Uploading from uri: $uri")
 
         val storageRef = Firebase.storage.reference
         val fileName = "gardens/${UUID.randomUUID()}.jpg"

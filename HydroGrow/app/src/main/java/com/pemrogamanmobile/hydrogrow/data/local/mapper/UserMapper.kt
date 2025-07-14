@@ -7,9 +7,8 @@ fun UserEntity.toDomain(): User = User(
     id = id,
     email = email,
     password = password,
-    name = name,
-    phonenumber = phonenumber,
-    address = address,
+    username = username,
+    nickname = nickname,
     photourl = photourl
 )
 
@@ -17,9 +16,8 @@ fun User.toEntity(): UserEntity = UserEntity(
     id = id,
     email = email,
     password = password,
-    name = name,
-    phonenumber = phonenumber,
-    address = address,
+    username = username,
+    nickname = nickname,
     photourl = photourl
 )
 
