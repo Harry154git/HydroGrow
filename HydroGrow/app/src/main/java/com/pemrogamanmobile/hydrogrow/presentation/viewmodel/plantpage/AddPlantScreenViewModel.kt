@@ -2,7 +2,7 @@ package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.plantpage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pemrogamanmobile.hydrogrow.domain.usecase.GardenUseCase
+import com.pemrogamanmobile.hydrogrow.data.repository.GardenUseCase
 import com.pemrogamanmobile.hydrogrow.domain.usecase.PlantUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject

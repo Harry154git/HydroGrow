@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewModelScope
 import com.pemrogamanmobile.hydrogrow.domain.model.Garden
-import com.pemrogamanmobile.hydrogrow.domain.usecase.geminiai.AnalyzeDataUseCase
-import com.pemrogamanmobile.hydrogrow.domain.usecase.GardenUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.geminiai.AnalyzeHydroponicsDataUseCase
+import com.pemrogamanmobile.hydrogrow.data.repository.GardenUseCase
 import com.pemrogamanmobile.hydrogrow.domain.usecase.UserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MakeGardenViewModel @Inject constructor(
-    private val analyzeDataUseCase: AnalyzeDataUseCase,
+    private val analyzeHydroponicsDataUseCase: AnalyzeHydroponicsDataUseCase,
     private val gardenUseCase: GardenUseCase,
     private val userUseCase: UserUseCase
 ) : ViewModel() {
@@ -51,7 +51,7 @@ class MakeGardenViewModel @Inject constructor(
                 Budget: Rp $budget
             """.trimIndent()
 
-            val aiResponse = analyzeDataUseCase(combinedInput)
+            val aiResponse = analyzeHydroponicsDataUseCase(combinedInput)
 
             _explanation.value = aiResponse
             _loading.value = false

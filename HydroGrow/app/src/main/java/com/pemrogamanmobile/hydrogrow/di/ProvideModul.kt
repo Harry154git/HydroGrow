@@ -11,11 +11,17 @@ import com.pemrogamanmobile.hydrogrow.data.local.room.dao.GardenDao
 import com.pemrogamanmobile.hydrogrow.data.local.room.dao.PlantDao
 import com.pemrogamanmobile.hydrogrow.data.local.room.dao.UserDao
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.AuthService
+import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.ChatBotService
+import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.GameService
+import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.GardenService
+import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.PlantService
+import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.PostingService
+import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.UserService
 import com.pemrogamanmobile.hydrogrow.data.remote.service.gemini.GeminiApiClient
 import com.pemrogamanmobile.hydrogrow.data.remote.service.gemini.GeminiApiService
 import com.pemrogamanmobile.hydrogrow.domain.repository.GardenRepository
 import com.pemrogamanmobile.hydrogrow.domain.repository.PlantRepository
-import com.pemrogamanmobile.hydrogrow.domain.usecase.GardenUseCase
+import com.pemrogamanmobile.hydrogrow.data.repository.GardenUseCase
 import com.pemrogamanmobile.hydrogrow.domain.usecase.PlantUseCase
 import dagger.Module
 import dagger.Provides
@@ -69,7 +75,27 @@ public class ProvideModule {
 
     @Provides
     @Singleton
-    fun provideFirestoreService(db: FirebaseFirestore): FirestoreService = FirestoreService(db)
+    fun provideChatBotService(db: FirebaseFirestore): ChatBotService = ChatBotService(db)
+
+    @Provides
+    @Singleton
+    fun providePostingService(db: FirebaseFirestore): PostingService = PostingService(db)
+
+    @Provides
+    @Singleton
+    fun provideGameService(db: FirebaseFirestore): GameService = GameService(db)
+
+    @Provides
+    @Singleton
+    fun provideGardenService(db: FirebaseFirestore): GardenService = GardenService(db)
+
+    @Provides
+    @Singleton
+    fun providePlantService(db: FirebaseFirestore): PlantService = PlantService(db)
+
+    @Provides
+    @Singleton
+    fun provideUserService(db: FirebaseFirestore): UserService = UserService(db)
 
     @Provides
     @Singleton
@@ -77,7 +103,6 @@ public class ProvideModule {
         val apiKey = "AIzaSyCi5bwp6JVJ3R5CUzbLroxKcwtYek_dax4"
         return GeminiApiClient.create(apiKey)
     }
-
 
     @Provides
     @Singleton

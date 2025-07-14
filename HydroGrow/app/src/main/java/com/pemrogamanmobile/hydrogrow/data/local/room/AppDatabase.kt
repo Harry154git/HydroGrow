@@ -2,6 +2,7 @@ package com.pemrogamanmobile.hydrogrow.data.local.room
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.pemrogamanmobile.hydrogrow.data.local.room.dao.UserDao
 import com.pemrogamanmobile.hydrogrow.data.local.room.entity.UserEntity
 import com.pemrogamanmobile.hydrogrow.data.local.room.dao.GardenDao
@@ -20,6 +21,7 @@ import com.pemrogamanmobile.hydrogrow.data.local.room.entity.GameEntity
     version = 3,
     exportSchema = true
 )
+@TypeConverters(ChatBotTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun gardenDao(): GardenDao

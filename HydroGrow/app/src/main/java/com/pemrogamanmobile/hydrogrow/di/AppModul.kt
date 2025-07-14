@@ -1,12 +1,12 @@
 package com.pemrogamanmobile.hydrogrow.di
 
 import com.pemrogamanmobile.hydrogrow.data.repository.GardenRepositoryImpl
-import com.pemrogamanmobile.hydrogrow.data.repository.GeminiRepositoryImpl
+import com.pemrogamanmobile.hydrogrow.data.repository.ChatBotRepositoryImpl
 import com.pemrogamanmobile.hydrogrow.data.repository.PlantRepositoryImpl
 import com.pemrogamanmobile.hydrogrow.data.repository.PreferencesRepositoryImpl
 import com.pemrogamanmobile.hydrogrow.data.repository.UserRepositoryImpl
 import com.pemrogamanmobile.hydrogrow.domain.repository.GardenRepository
-import com.pemrogamanmobile.hydrogrow.domain.repository.GeminiRepository
+import com.pemrogamanmobile.hydrogrow.domain.repository.ChatBotRepository
 import com.pemrogamanmobile.hydrogrow.domain.repository.PlantRepository
 import com.pemrogamanmobile.hydrogrow.domain.repository.PreferencesRepository
 import com.pemrogamanmobile.hydrogrow.domain.repository.UserRepository
@@ -29,8 +29,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindGeminiRepository(
-        impl: GeminiRepositoryImpl
-    ): GeminiRepository
+        impl: ChatBotRepositoryImpl
+    ): ChatBotRepository
 
     @Binds
     @Singleton

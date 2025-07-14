@@ -2,7 +2,7 @@ package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.chatbotpage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pemrogamanmobile.hydrogrow.domain.usecase.geminiai.AnalyzeConversationUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.geminiai.ChatBotUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -12,7 +12,7 @@ import kotlinx.coroutines.delay
 
 @HiltViewModel
 class ChatBotScreenViewModel @Inject constructor(
-    private val analyzeConversationUseCase: AnalyzeConversationUseCase
+    private val chatBotUseCase: ChatBotUseCase
 ) : ViewModel() {
 
     private val _messages = mutableStateListOf<Message>()
@@ -25,7 +25,7 @@ class ChatBotScreenViewModel @Inject constructor(
         _isTyping.value = true
 
         viewModelScope.launch {
-            val response = analyzeConversationUseCase.execute(listOf(userMessage))
+            val response = chatBotUseCase.execute(listOf(userMessage))
 
             val aiMessage = Message("", isUser = false)
             _messages.add(aiMessage)

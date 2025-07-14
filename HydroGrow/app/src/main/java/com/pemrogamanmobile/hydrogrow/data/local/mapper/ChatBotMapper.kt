@@ -1,5 +1,6 @@
 package com.pemrogamanmobile.hydrogrow.data.local.mapper
 
+import com.pemrogamanmobile.hydrogrow.data.local.room.ChatBotTypeConverters
 import com.pemrogamanmobile.hydrogrow.data.local.room.entity.ChatBotEntity
 import com.pemrogamanmobile.hydrogrow.domain.model.ChatBot
 
@@ -9,7 +10,10 @@ import com.pemrogamanmobile.hydrogrow.domain.model.ChatBot
 fun ChatBotEntity.toDomain(): ChatBot = ChatBot(
     id = this.id,
     userOwnerId = this.userOwnerId,
-    conversation = this.conversation.split("|||").filter { it.isNotBlank() },
+    title = this.title,
+    // Type converter akan menangani konversi String JSON ke MutableList
+    conversation = ChatBotTypeConverters().toStringList(this.conversation),
+    relatedGardenId = this.relatedGardenId,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
 )
@@ -20,9 +24,12 @@ fun ChatBotEntity.toDomain(): ChatBot = ChatBot(
 fun ChatBot.toEntity(): ChatBotEntity = ChatBotEntity(
     id = this.id,
     userOwnerId = this.userOwnerId,
-    conversation = this.conversation.joinToString("|||"),
-    createdAt = this.createdAt, // Preserves the original creation timestamp
-    updatedAt = System.currentTimeMillis() // Sets the update timestamp to now
+    title = this.title,
+    // Type converter akan menangani konversi MutableList ke String JSON
+    conversation = ChatBotTypeConverters().fromStringList(this.conversation),
+    relatedGardenId = this.relatedGardenId,
+    createdAt = this.createdAt,
+    updatedAt = this.updatedAt
 )
 
 /**

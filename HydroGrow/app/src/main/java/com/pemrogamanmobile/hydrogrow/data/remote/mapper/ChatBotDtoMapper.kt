@@ -9,7 +9,9 @@ import com.pemrogamanmobile.hydrogrow.domain.model.ChatBot
 fun ChatBotDto.toDomain(): ChatBot = ChatBot(
     id = this.id,
     userOwnerId = this.userOwnerId,
-    conversation = this.conversation, // Direct mapping, no need to split
+    title = this.title,
+    conversation = this.conversation.toMutableList(),
+    relatedGardenId = this.relatedGardenId,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
 )
@@ -20,7 +22,9 @@ fun ChatBotDto.toDomain(): ChatBot = ChatBot(
 fun ChatBot.toDto(): ChatBotDto = ChatBotDto(
     id = this.id,
     userOwnerId = this.userOwnerId,
-    conversation = this.conversation, // Direct mapping, no need to join
+    title = this.title,
+    conversation = this.conversation,
+    relatedGardenId = this.relatedGardenId,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
 )

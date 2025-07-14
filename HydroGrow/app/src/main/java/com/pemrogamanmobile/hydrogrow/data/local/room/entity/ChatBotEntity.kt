@@ -1,21 +1,15 @@
 package com.pemrogamanmobile.hydrogrow.data.local.room.entity
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "chatbot")
 data class ChatBotEntity(
     @PrimaryKey val id: String,
-
-    @ColumnInfo(name = "user_owner_id")
     val userOwnerId: String,
-
-    val conversation: String,
-
-    @ColumnInfo(name = "created_at")
+    val title: String,
+    val conversation: String, // List<String> akan diubah menjadi satu String JSON
+    val relatedGardenId: String?,
     val createdAt: Long,
-
-    @ColumnInfo(name = "updated_at")
     val updatedAt: Long
 )
