@@ -8,10 +8,6 @@ import javax.inject.Inject
 class PreferencesRepositoryImpl @Inject constructor(
     private val preferenceManager: PreferenceManager
 ) : PreferencesRepository {
-    override fun observeDarkMode(): Flow<Boolean> = preferenceManager.darkModeFlow
-    override suspend fun setDarkMode(enabled: Boolean) = preferenceManager.setDarkMode(enabled)
-    override fun observeLanguage(): Flow<String> = preferenceManager.languageFlow
-    override suspend fun setLanguage(lang: String) = preferenceManager.setLanguage(lang)
 
     override val onboardingCompleted: Flow<Boolean>
         get() = preferenceManager.onboardingCompletedFlow

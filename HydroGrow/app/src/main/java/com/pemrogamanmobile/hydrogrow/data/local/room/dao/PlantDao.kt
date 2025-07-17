@@ -25,15 +25,16 @@ interface PlantDao {
     @Query("SELECT * FROM plant WHERE id = :plantId LIMIT 1")
     fun getPlantById(plantId: String): Flow<PlantEntity?>
 
-    @Query("DELETE FROM plant")
-    suspend fun deleteAll()
+    @Query("DELETE FROM plant WHERE gardenOwnerId = :gardenId")
+    suspend fun deletePlantsByGardenId(gardenId: String)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(plants: List<PlantEntity>)
-
+    /**
+     * Deletes all existing plants for a garden and inserts the new list
+     * within a single database transaction. This ensures data consistency.
+     */
     @Transaction
-    suspend fun replaceAll(plants: List<PlantEntity>) {
-        deleteAll()
-        insertAll(plants)
+    suspend fun synchronizeGardenPlants(gardenId: String, plants: List<PlantEntity>) {
+        deletePlantsByGardenId(gardenId)
+        insertPlants(plants)
     }
 }

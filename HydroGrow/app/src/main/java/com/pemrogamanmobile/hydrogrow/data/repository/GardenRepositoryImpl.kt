@@ -15,9 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.emitAll
-
 
 class GardenRepositoryImpl @Inject constructor(
     private val dao: GardenDao,
@@ -31,69 +29,84 @@ class GardenRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertGarden(garden: Garden) {
-        val entity = garden.toEntity()
-        dao.insertGarden(entity)
+        // Langsung kirim ke Firestore
         firestore.uploadGarden(getUserId(), garden.toDto())
+        // Kemudian simpan ke database lokal
+        dao.insertGarden(garden.toEntity())
     }
 
     override suspend fun uploadGardenImage(uri: Uri): String {
-        return imageUploader.uploadImageToStorage(uri)
+        // Sekarang kita tentukan folder penyimpanannya adalah "gardens"
+        return imageUploader.uploadImageToStorage(uri, "gardens")
     }
 
     override suspend fun updateGarden(garden: Garden) {
-        val entity = garden.toEntity()
-        dao.updateGarden(entity)
+        // Langsung update ke Firestore
         firestore.uploadGarden(getUserId(), garden.toDto())
+        // Kemudian update di database lokal
+        dao.updateGarden(garden.toEntity())
     }
 
     override suspend fun deleteGarden(garden: Garden) {
-        dao.deleteGarden(garden.toEntity())
+        // Langsung hapus dari Firestore
         firestore.deleteGarden(getUserId(), garden.id)
+        // Kemudian hapus dari database lokal
+        dao.deleteGarden(garden.toEntity())
     }
 
-    override fun getAllGardens(): Flow<List<Garden>> = flow {
-        val localData = dao.getAllGardens().firstOrNull()?.map { it.toDomain() } ?: emptyList()
+    override fun getAllGardens(): Flow<List<Garden>> {
+        val userId = getUserId()
+        return createSyncedGardenFlow(userId)
+    }
 
-        if (localData.isNotEmpty()) {
-            emit(localData)
-        } else {
-            // Fetch dari Firestore jika lokal kosong
-            val remoteData = firestore.getGardens(getUserId()).map { it.toDomain() }
-            // Simpan ke lokal
-            remoteData.forEach { dao.insertGarden(it.toEntity()) }
-            emit(remoteData)
+    /**
+     * Helper function untuk membuat Flow yang sinkron antara Firestore dan Room.
+     * Mengambil data dari Firestore, menyimpannya ke Room, lalu mengembalikan Flow dari Room.
+     */
+    private fun createSyncedGardenFlow(userId: String): Flow<List<Garden>> = flow {
+        if (userId.isNotEmpty()) {
+            try {
+                // 1. Ambil data terbaru dari Firestore
+                val remoteData = firestore.getGardens(userId).map { it.toDomain() }
+
+                // 2. Hapus data lama di lokal untuk user ini
+                dao.deleteAllGardensByUserId(userId)
+
+                // 3. Masukkan data baru dari Firestore ke lokal
+                dao.insertGardens(remoteData.map { it.toEntity() })
+            } catch (e: Exception) {
+                // Jika gagal (misal: tidak ada internet), flow akan lanjut
+                // dan mengandalkan data yang sudah ada di cache lokal.
+                // Anda bisa menambahkan logging di sini.
+            }
         }
 
-        // Listen update Room
-        emitAll(dao.getAllGardens().map { it.map { e -> e.toDomain() } })
+        // 4. Emit semua data dari Room dan terus memantaunya untuk perubahan.
+        // Ini adalah "Single Source of Truth" untuk UI.
+        emitAll(dao.getGardensByUserId(userId).map { entities ->
+            entities.map { it.toDomain() }
+        })
     }
 
-    override fun getGardensByUserId(userId: String): Flow<List<Garden>> = flow {
-        val localData = dao.getGardensByUserId(userId).firstOrNull()?.map { it.toDomain() } ?: emptyList()
-
-        if (localData.isNotEmpty()) {
-            emit(localData)
-        } else {
-            val remoteData = firestore.getGardens(userId).map { it.toDomain() }
-            remoteData.forEach { dao.insertGarden(it.toEntity()) }
-            emit(remoteData)
-        }
-
-        emitAll(dao.getGardensByUserId(userId).map { it.map { e -> e.toDomain() } })
-    }
 
     override suspend fun getGardenById(gardenId: String): Garden? {
-        var entity = dao.getGardenById(gardenId)
-        if (entity != null) {
-            return entity.toDomain()
+        val userId = getUserId()
+        return try {
+            // 1. Selalu coba ambil dari Firestore terlebih dahulu
+            val remoteGardenDto = firestore.getGardenById(userId, gardenId)
+            if (remoteGardenDto != null) {
+                val garden = remoteGardenDto.toDomain()
+                // 2. Simpan/update data terbaru ke lokal
+                dao.insertGarden(garden.toEntity())
+                garden
+            } else {
+                // Jika tidak ada di Firestore, hapus dari lokal untuk konsistensi
+                dao.deleteGardenById(gardenId)
+                null
+            }
+        } catch (e: Exception) {
+            // 3. Jika network error, fallback ke data lokal
+            dao.getGardenById(gardenId)?.toDomain()
         }
-
-        val remoteGarden = firestore.getGardenById(getUserId(), gardenId)
-        remoteGarden?.let {
-            dao.insertGarden(it.toDomain().toEntity())
-            return it.toDomain()
-        }
-        return null
     }
 }
-

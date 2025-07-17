@@ -29,10 +29,6 @@ class GardenUseCase @Inject constructor(
         return repository.getAllGardens()
     }
 
-    fun getGardensByUserId(userId: String): Flow<List<Garden>> {
-        return repository.getGardensByUserId(userId)
-    }
-
     suspend fun getGardenById(gardenId: String): Garden? {
         return repository.getGardenById(gardenId)
     }

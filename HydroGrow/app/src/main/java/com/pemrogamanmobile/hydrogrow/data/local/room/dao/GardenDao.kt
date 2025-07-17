@@ -25,16 +25,16 @@ interface GardenDao {
     @Query("SELECT * FROM garden WHERE userOwnerId = :userId")
     fun getGardensByUserId(userId: String): Flow<List<GardenEntity>>
 
-    @Query("DELETE FROM garden")
-    suspend fun deleteAll()
-
+    // FUNGSI BARU: Untuk memasukkan list kebun sekaligus (dibutuhkan untuk sinkronisasi)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(gardens: List<GardenEntity>)
+    suspend fun insertGardens(gardens: List<GardenEntity>)
 
-    @Transaction
-    suspend fun replaceAll(gardens: List<GardenEntity>) {
-        deleteAll()
-        insertAll(gardens)
-    }
+    // FUNGSI BARU: Menghapus semua kebun milik user tertentu (dibutuhkan untuk sinkronisasi)
+    @Query("DELETE FROM garden WHERE userOwnerId = :userId")
+    suspend fun deleteAllGardensByUserId(userId: String)
+
+    // FUNGSI BARU: Menghapus kebun berdasarkan ID-nya (dibutuhkan untuk getGardenById)
+    @Query("DELETE FROM garden WHERE id = :gardenId")
+    suspend fun deleteGardenById(gardenId: String)
 
 }

@@ -10,10 +10,16 @@ import android.util.Log
 
 class ImageUploader @Inject constructor() {
 
-    suspend fun uploadImageToStorage(uri: Uri): String {
-
+    /**
+     * Mengunggah gambar ke Cloud Storage di dalam folder yang ditentukan.
+     * @param uri Alamat file gambar di perangkat.
+     * @param folderName Nama folder di Cloud Storage (contoh: "gardens", "plants", "posts").
+     * @return URL download dari gambar yang telah diunggah.
+     */
+    suspend fun uploadImageToStorage(uri: Uri, folderName: String): String {
         val storageRef = Firebase.storage.reference
-        val fileName = "gardens/${UUID.randomUUID()}.jpg"
+        // Nama file sekarang dinamis berdasarkan folderName
+        val fileName = "$folderName/${UUID.randomUUID()}.jpg"
         val imageRef = storageRef.child(fileName)
 
         imageRef.putFile(uri).await()

@@ -6,31 +6,18 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface GameDao {
-
+    // Menggunakan OnConflictStrategy.REPLACE agar bisa berfungsi sebagai insert dan update
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGame(game: GameEntity)
-
-    @Update
-    suspend fun updateGame(game: GameEntity)
 
     @Delete
     suspend fun deleteGame(game: GameEntity)
 
-    @Query("SELECT * FROM game WHERE id = :gameId LIMIT 1")
-    suspend fun getGameById(gameId: String): GameEntity?
+    // Fungsi baru untuk mengambil satu game milik user
+    @Query("SELECT * FROM game WHERE userOwnerId = :userId LIMIT 1")
+    fun getGameForUser(userId: String): Flow<GameEntity?>
 
-    @Query("SELECT * FROM game WHERE userOwnerId = :userId")
-    fun getGameByUserId(userId: String): Flow<List<GameEntity>>
-
-    @Query("DELETE FROM game")
-    suspend fun deleteAll()
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(game: List<GameEntity>)
-
-    @Transaction
-    suspend fun replaceAll(game: List<GameEntity>) {
-        deleteAll()
-        insertAll(game)
-    }
+    // Fungsi baru untuk menghapus semua data game milik user (untuk sinkronisasi)
+    @Query("DELETE FROM game WHERE userOwnerId = :userId")
+    suspend fun deleteGameForUser(userId: String)
 }

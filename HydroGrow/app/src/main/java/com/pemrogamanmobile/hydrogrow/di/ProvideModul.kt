@@ -21,7 +21,7 @@ import com.pemrogamanmobile.hydrogrow.data.remote.service.gemini.GeminiApiClient
 import com.pemrogamanmobile.hydrogrow.data.remote.service.gemini.GeminiApiService
 import com.pemrogamanmobile.hydrogrow.domain.repository.GardenRepository
 import com.pemrogamanmobile.hydrogrow.domain.repository.PlantRepository
-import com.pemrogamanmobile.hydrogrow.data.repository.GardenUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.GardenUseCase
 import com.pemrogamanmobile.hydrogrow.domain.usecase.PlantUseCase
 import dagger.Module
 import dagger.Provides

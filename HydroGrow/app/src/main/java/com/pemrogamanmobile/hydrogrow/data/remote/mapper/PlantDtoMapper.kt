@@ -1,5 +1,6 @@
 package com.pemrogamanmobile.hydrogrow.data.remote.mapper
 
+import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PlantEntity
 import com.pemrogamanmobile.hydrogrow.data.remote.dto.PlantDto
 import com.pemrogamanmobile.hydrogrow.domain.model.Plant
 
@@ -16,6 +17,14 @@ fun Plant.toDto(): PlantDto = PlantDto(
     plantName = plantName,
     harvestTime = harvestTime,
     gardenOwnerId = gardenOwnerId,
+    imageUrl = imageUrl
+)
+
+fun PlantDto.toEntity(gardenId: String): PlantEntity = PlantEntity(
+    id = id,
+    plantName = plantName,
+    harvestTime = harvestTime,
+    gardenOwnerId = gardenId, // Ambil dari parameter jika tidak ada di DTO
     imageUrl = imageUrl
 )
 

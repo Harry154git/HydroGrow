@@ -1,6 +1,6 @@
 package com.pemrogamanmobile.hydrogrow.data.local.mapper
 
-import com.pemrogamanmobile.hydrogrow.data.local.room.ChatBotTypeConverters
+import com.pemrogamanmobile.hydrogrow.data.local.room.converter.ChatBotTypeConverters
 import com.pemrogamanmobile.hydrogrow.data.local.room.entity.ChatBotEntity
 import com.pemrogamanmobile.hydrogrow.domain.model.ChatBot
 

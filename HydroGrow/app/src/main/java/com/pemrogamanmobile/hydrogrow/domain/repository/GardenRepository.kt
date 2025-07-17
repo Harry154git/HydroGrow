@@ -10,6 +10,5 @@ interface GardenRepository {
     suspend fun updateGarden(garden: Garden)
     suspend fun deleteGarden(garden: Garden)
     fun getAllGardens(): Flow<List<Garden>>
-    fun getGardensByUserId(userId: String): Flow<List<Garden>>
     suspend fun getGardenById(gardenId: String): Garden?
 }

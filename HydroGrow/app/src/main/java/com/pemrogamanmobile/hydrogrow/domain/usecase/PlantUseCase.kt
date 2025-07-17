@@ -1,5 +1,6 @@
 package com.pemrogamanmobile.hydrogrow.domain.usecase
 
+import android.net.Uri
 import com.pemrogamanmobile.hydrogrow.domain.model.Plant
 import com.pemrogamanmobile.hydrogrow.domain.repository.PlantRepository
 import kotlinx.coroutines.flow.Flow
@@ -8,6 +9,10 @@ import javax.inject.Inject
 class PlantUseCase @Inject constructor(
     private val repository: PlantRepository
 ) {
+    suspend fun uploadPlantImage(uri: Uri): String {
+        return repository.uploadPlantImage(uri)
+    }
+
     suspend fun insertPlant(plant: Plant) {
         repository.insertPlant(plant)
     }

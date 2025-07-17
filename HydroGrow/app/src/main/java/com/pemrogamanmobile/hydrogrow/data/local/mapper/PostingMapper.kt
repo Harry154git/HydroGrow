@@ -1,40 +1,46 @@
 package com.pemrogamanmobile.hydrogrow.data.local.mapper
 
 import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PostingEntity
-import com.pemrogamanmobile.hydrogrow.data.local.room.relation.PostingWithComments
 import com.pemrogamanmobile.hydrogrow.domain.model.Posting
 
 /**
- * Mengubah objek relasi dari database menjadi objek domain yang bersih.
+ * Mengubah PostingEntity dari database menjadi domain model Posting.
  */
-fun PostingWithComments.toDomain(): Posting = Posting(
-    id = posting.id,
-    userOwnerId = posting.userOwnerId,
-    userOwnerName = posting.userOwnerName,
-    userOwnerProfileUrl = posting.userOwnerProfileUrl,
-    imageUrl = posting.imageUrl,
-    likes = posting.likes,
-    comments = comments.toDomain(), // Memanggil mapper komentar di sini
-    createdAt = posting.createdAt,
-    updatedAt = posting.updatedAt
+fun PostingEntity.toDomain(): Posting = Posting(
+    id = this.id,
+    userOwnerId = this.userOwnerId,
+    userOwnerName = this.userOwnerName,
+    userOwnerProfileUrl = this.userOwnerProfileUrl,
+    imageUrl = this.imageUrl,
+    likes = this.likes,
+    // Langsung ambil daftar komentar dari entity
+    comments = this.comments,
+    createdAt = this.createdAt,
+    updatedAt = this.updatedAt
 )
 
 /**
- * Mengubah daftar objek relasi menjadi daftar objek domain.
- */
-fun List<PostingWithComments>.toDomain(): List<Posting> = map { it.toDomain() }
-
-/**
- * Mengubah objek domain menjadi entitas postingan (tanpa komentar).
- * Berguna saat menyimpan postingan ke database. Komentar disimpan terpisah.
+ * Mengubah domain model Posting menjadi PostingEntity untuk disimpan ke database.
  */
 fun Posting.toEntity(): PostingEntity = PostingEntity(
-    id = id,
-    userOwnerId = userOwnerId,
-    userOwnerName = userOwnerName,
-    userOwnerProfileUrl = userOwnerProfileUrl,
-    imageUrl = imageUrl,
-    likes = likes,
-    createdAt = createdAt,
-    updatedAt = updatedAt
+    id = this.id,
+    userOwnerId = this.userOwnerId,
+    userOwnerName = this.userOwnerName,
+    userOwnerProfileUrl = this.userOwnerProfileUrl,
+    imageUrl = this.imageUrl,
+    likes = this.likes,
+    // Simpan juga daftar komentar ke dalam entity
+    comments = this.comments,
+    createdAt = this.createdAt,
+    updatedAt = this.updatedAt
 )
+
+/**
+ * Mengubah daftar PostingEntity menjadi daftar domain model Posting.
+ */
+fun List<PostingEntity>.toDomain(): List<Posting> = map { it.toDomain() }
+
+/**
+ * Mengubah daftar domain model Posting menjadi daftar PostingEntity.
+ */
+fun List<Posting>.toEntity(): List<PostingEntity> = map { it.toEntity() }

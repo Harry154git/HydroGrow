@@ -1,4 +1,4 @@
-package com.pemrogamanmobile.hydrogrow.data.local.room
+package com.pemrogamanmobile.hydrogrow.data.local.room.converter
 
 import androidx.room.TypeConverter
 import com.google.gson.Gson
