@@ -3,21 +3,33 @@ package com.pemrogamanmobile.hydrogrow.data.local.mapper
 import com.pemrogamanmobile.hydrogrow.domain.model.Plant
 import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PlantEntity
 
-fun PlantEntity.toDomain(): Plant = Plant(
-    id = id,
-    plantName = plantName,
-    harvestTime = harvestTime,
-    gardenOwnerId = gardenOwnerId,
-    imageUrl = imageUrl
-)
+fun PlantEntity.toDomain(): Plant {
+    return Plant(
+        id = this.id,
+        plantName = this.plantName,
+        harvestTime = this.harvestTime,
+        gardenOwnerId = this.gardenOwnerId,
+        imageUrl = this.imageUrl,
+        plantingTime = this.plantingTime,
+        cupAmount = this.cupAmount,
+        userOwnerId = this.userId
+    )
+}
 
-fun Plant.toEntity(): PlantEntity = PlantEntity(
-    id = id,
-    plantName = plantName,
-    harvestTime = harvestTime,
-    gardenOwnerId = gardenOwnerId,
-    imageUrl = imageUrl
-)
+// Mengubah Model dari domain/UI menjadi Entity untuk disimpan ke database
+fun Plant.toEntity(): PlantEntity {
+    return PlantEntity(
+        id = this.id,
+        plantName = this.plantName,
+        harvestTime = this.harvestTime,
+        gardenOwnerId = this.gardenOwnerId,
+        imageUrl = this.imageUrl,
+        plantingTime = this.plantingTime,
+        cupAmount = this.cupAmount,
+        userId = this.userOwnerId
+    )
+}
 
-fun List<PlantEntity>.toDomainList(): List<Plant> = map { it.toDomain() }
-fun List<Plant>.toEntityList(): List<PlantEntity> = map { it.toEntity() }
+// Jika kamu menggunakan list
+fun List<PlantEntity>.toDomain(): List<Plant> = this.map { it.toDomain() }
+fun List<Plant>.toEntity(): List<PlantEntity> = this.map { it.toEntity() }

@@ -19,13 +19,13 @@ interface PlantDao {
     @Delete
     suspend fun deletePlant(plant: PlantEntity)
 
-    @Query("SELECT * FROM plant WHERE gardenOwnerId = :gardenId")
+    @Query("SELECT * FROM plant WHERE garden_owner_id = :gardenId")
     fun getPlantsByGardenId(gardenId: String): Flow<List<PlantEntity>>
 
     @Query("SELECT * FROM plant WHERE id = :plantId LIMIT 1")
     fun getPlantById(plantId: String): Flow<PlantEntity?>
 
-    @Query("DELETE FROM plant WHERE gardenOwnerId = :gardenId")
+    @Query("DELETE FROM plant WHERE garden_owner_id = :gardenId")
     suspend fun deletePlantsByGardenId(gardenId: String)
 
     /**
@@ -35,6 +35,31 @@ interface PlantDao {
     @Transaction
     suspend fun synchronizeGardenPlants(gardenId: String, plants: List<PlantEntity>) {
         deletePlantsByGardenId(gardenId)
+        insertPlants(plants)
+    }
+
+    // --- TAMBAHAN: Fungsi baru untuk semua data per-User ---
+
+    /**
+     * Mengambil semua tanaman dari database lokal yang dimiliki oleh user tertentu.
+     * Prasyarat: Tabel 'plant' harus memiliki kolom 'user_id'.
+     */
+    @Query("SELECT * FROM plant WHERE user_id = :userId")
+    suspend fun getAllUserPlants(userId: String): List<PlantEntity>
+
+    /**
+     * Menghapus semua tanaman dari database lokal yang dimiliki oleh user tertentu.
+     */
+    @Query("DELETE FROM plant WHERE user_id = :userId")
+    suspend fun deleteAllUserPlants(userId: String)
+
+    /**
+     * Menjalankan penghapusan dan penyisipan dalam satu transaksi atomik.
+     * Ini untuk memastikan konsistensi data saat sinkronisasi dari Firestore.
+     */
+    @Transaction
+    suspend fun synchronizeAllUserPlants(userId: String, plants: List<PlantEntity>) {
+        deleteAllUserPlants(userId)
         insertPlants(plants)
     }
 }

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.9.3"
+agp = "8.11.1"
 coilCompose = "2.4.0"
 converterGson = "2.11.0"
 datastorePreferences = "1.1.7"
@@ -45,6 +45,7 @@ coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose"
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -81,8 +82,17 @@ firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashly
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version = "1.9.10" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version = "1.9.22" }
-hilt = { id = "com.google.dagger.hilt.android", version = "2.50" }
+
+# Perbaikan: Menggunakan versi Kotlin dari [versions]
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+# Perbaikan: Menyamakan versi plugin Hilt dengan versi library-nya
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hiltAndroid" }
+
 google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleFirebaseCrashlytics" }
+
+# Perbaikan: Menggunakan versi KSP yang kompatibel dengan Kotlin 2.0.21
+# Format baru: [versi_kotlin]-[versi_rilis_ksp]
+google-devtools-ksp = { id = "com.google.devtools.ksp", version = "2.0.21-1.0.25" }
 

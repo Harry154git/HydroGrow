@@ -12,7 +12,7 @@ data class PostingEntity(
     val userOwnerName: String,
     val userOwnerProfileUrl: String?,
     val imageUrl: String?,
-    val likes: String,
+    val likes: Int,
     val createdAt: Long,
     val updatedAt: Long,
     val comments: List<Comment>

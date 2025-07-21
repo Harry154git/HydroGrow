@@ -1,7 +1,13 @@
 package com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.pemrogamanmobile.hydrogrow.data.remote.dto.GardenDto
 import com.pemrogamanmobile.hydrogrow.data.remote.dto.PlantDto
+import com.pemrogamanmobile.hydrogrow.data.remote.mapper.toDomain
+import com.pemrogamanmobile.hydrogrow.domain.model.Plant
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 
 class PlantService(private val db: FirebaseFirestore) {
@@ -32,5 +38,29 @@ class PlantService(private val db: FirebaseFirestore) {
      */
     suspend fun deletePlant(userId: String, gardenId: String, plantId: String) {
         plantCol(userId, gardenId).document(plantId).delete().await()
+    }
+
+    suspend fun getAllUserPlants(userId: String): List<Plant> = coroutineScope {
+        // 1. Ambil semua garden milik user
+        val gardensSnapshot = db.collection("users").document(userId)
+            .collection("gardens").get().await()
+        val gardens = gardensSnapshot.toObjects(GardenDto::class.java)
+
+        // 2. Untuk setiap garden, ambil semua plants-nya secara bersamaan (concurrent)
+        val allPlantsDeferred = gardens.map { garden ->
+            async {
+                val plantsSnapshot = db.collection("users").document(userId)
+                    .collection("gardens").document(garden.id)
+                    .collection("plants").get().await()
+
+                val plantDtos = plantsSnapshot.toObjects(PlantDto::class.java)
+
+                // 3. Langsung mapping ke Domain Model karena kita punya semua data yang diperlukan
+                plantDtos.map { dto -> dto.toDomain(gardenId = garden.id, userId = userId) }
+            }
+        }
+
+        // 4. Tunggu semua proses selesai dan gabungkan hasilnya menjadi satu list
+        allPlantsDeferred.awaitAll().flatten()
     }
 }

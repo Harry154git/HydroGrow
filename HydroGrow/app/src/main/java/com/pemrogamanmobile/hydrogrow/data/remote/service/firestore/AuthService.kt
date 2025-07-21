@@ -1,24 +1,29 @@
 package com.pemrogamanmobile.hydrogrow.data.remote.service.firestore
 
+import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class AuthService(private val auth: FirebaseAuth) {
-    suspend fun login(email: String, password: String): FirebaseUser? {
+class AuthService @Inject constructor(
+    private val auth: FirebaseAuth
+) {
+    // Mengembalikan user yang sedang login dari FirebaseAuth
+    fun getCurrentUser(): FirebaseUser? = auth.currentUser
+
+    // Fungsi sign-in umum yang menerima credential
+    suspend fun signInWithCredential(credential: AuthCredential): FirebaseUser? {
         return try {
-            val result = auth.signInWithEmailAndPassword(email, password).await()
-            result.user
+            auth.signInWithCredential(credential).await().user
         } catch (e: Exception) {
-            null
+            // Log error atau tangani di sini jika perlu
+            throw e // Lemparkan exception agar bisa ditangani oleh repository
         }
     }
 
-    suspend fun register(email: String, password: String): FirebaseUser? {
-        return auth.createUserWithEmailAndPassword(email, password).await().user
+    // Fungsi untuk logout
+    suspend fun signOut() {
+        auth.signOut()
     }
-
-    fun getCurrentUser() = auth.currentUser
-
-    suspend fun logout() = auth.signOut()
 }

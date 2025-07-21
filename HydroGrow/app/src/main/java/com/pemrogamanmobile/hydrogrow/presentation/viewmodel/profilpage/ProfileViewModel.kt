@@ -2,7 +2,6 @@ package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.profilpage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pemrogamanmobile.hydrogrow.domain.usecase.UserUseCase
 import com.pemrogamanmobile.hydrogrow.presentation.mapper.toDomain
 import com.pemrogamanmobile.hydrogrow.presentation.mapper.toUi
 import com.pemrogamanmobile.hydrogrow.presentation.model.UserUi

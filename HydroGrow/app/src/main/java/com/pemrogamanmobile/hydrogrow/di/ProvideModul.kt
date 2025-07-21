@@ -9,20 +9,18 @@ import com.pemrogamanmobile.hydrogrow.data.local.datastore.PreferenceManager
 import com.pemrogamanmobile.hydrogrow.data.local.room.AppDatabase
 import com.pemrogamanmobile.hydrogrow.data.local.room.dao.GardenDao
 import com.pemrogamanmobile.hydrogrow.data.local.room.dao.PlantDao
-import com.pemrogamanmobile.hydrogrow.data.local.room.dao.UserDao
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.AuthService
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.ChatBotService
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.GameService
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.GardenService
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.PlantService
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.PostingService
-import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.UserService
 import com.pemrogamanmobile.hydrogrow.data.remote.service.gemini.GeminiApiClient
 import com.pemrogamanmobile.hydrogrow.data.remote.service.gemini.GeminiApiService
 import com.pemrogamanmobile.hydrogrow.domain.repository.GardenRepository
 import com.pemrogamanmobile.hydrogrow.domain.repository.PlantRepository
-import com.pemrogamanmobile.hydrogrow.domain.usecase.GardenUseCase
-import com.pemrogamanmobile.hydrogrow.domain.usecase.PlantUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.garden.GardenUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.plant.PlantUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,9 +41,6 @@ public class ProvideModule {
         ).fallbackToDestructiveMigration()
             .build()
     }
-
-    @Provides
-    fun provideUserDao(db: AppDatabase): UserDao = db.userDao()
 
     @Provides
     fun provideGardenDao(db: AppDatabase): GardenDao = db.gardenDao()
@@ -92,10 +87,6 @@ public class ProvideModule {
     @Provides
     @Singleton
     fun providePlantService(db: FirebaseFirestore): PlantService = PlantService(db)
-
-    @Provides
-    @Singleton
-    fun provideUserService(db: FirebaseFirestore): UserService = UserService(db)
 
     @Provides
     @Singleton

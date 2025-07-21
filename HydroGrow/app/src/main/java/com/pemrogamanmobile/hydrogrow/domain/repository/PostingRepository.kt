@@ -68,4 +68,12 @@ interface PostingRepository {
      * @param comment Objek Comment yang akan dihapus.
      */
     suspend fun deleteComment(comment: Comment)
+
+    /**
+     * Menambahkan atau menghapus 'like' dari sebuah postingan untuk pengguna saat ini.
+     * Logika untuk memeriksa apakah user sudah me-like atau belum akan ditangani
+     * di dalam implementasi repository ini.
+     * @param postId ID dari postingan yang akan di-like atau di-unlike.
+     */
+    suspend fun likeUnlikePosting(postId: String) // <-- FUNGSI YANG DIMINTA
 }

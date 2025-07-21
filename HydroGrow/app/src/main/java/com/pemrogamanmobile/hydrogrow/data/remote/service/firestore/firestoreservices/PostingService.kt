@@ -92,4 +92,59 @@ class PostingService(private val db: FirebaseFirestore) {
             .update("comments", FieldValue.arrayRemove(comment))
             .await()
     }
+
+    /**
+     * Memeriksa apakah seorang pengguna sudah menyukai postingan tertentu.
+     * @param postId ID postingan.
+     * @param userId ID pengguna yang akan diperiksa.
+     * @return Boolean `true` jika sudah di-like, `false` jika belum.
+     */
+    suspend fun isPostLikedByUser(postId: String, userId: String): Boolean {
+        val likeDoc = postingCol.document(postId)
+            .collection("likes") // Akses sub-koleksi 'likes'
+            .document(userId)    // Dokumen 'like' dinamai dengan ID pengguna
+            .get()
+            .await()
+        return likeDoc.exists()
+    }
+
+    /**
+     * Menambahkan 'like' dari pengguna ke postingan dan menaikkan jumlah 'likesCount'.
+     * Dilakukan secara atomik menggunakan batch write.
+     * @param postId ID postingan yang akan di-like.
+     * @param userId ID pengguna yang me-like.
+     */
+    suspend fun likePost(postId: String, userId: String) {
+        val postRef = postingCol.document(postId)
+        val likeRef = postRef.collection("likes").document(userId)
+
+        // Gunakan batch write untuk memastikan kedua operasi berhasil atau gagal bersamaan
+        db.runBatch { batch ->
+            // 1. Tambah dokumen di sub-koleksi 'likes'
+            batch.set(likeRef, mapOf("likedAt" to FieldValue.serverTimestamp()))
+
+            // 2. Naikkan (increment) counter 'likesCount' di dokumen postingan utama
+            batch.update(postRef, "likesCount", FieldValue.increment(1))
+        }.await()
+    }
+
+    /**
+     * Menghapus 'like' dari pengguna pada postingan dan menurunkan jumlah 'likesCount'.
+     * Dilakukan secara atomik menggunakan batch write.
+     * @param postId ID postingan yang akan di-unlike.
+     * @param userId ID pengguna yang melakukan unlike.
+     */
+    suspend fun unlikePost(postId: String, userId: String) {
+        val postRef = postingCol.document(postId)
+        val likeRef = postRef.collection("likes").document(userId)
+
+        // Gunakan batch write untuk konsistensi data
+        db.runBatch { batch ->
+            // 1. Hapus dokumen dari sub-koleksi 'likes'
+            batch.delete(likeRef)
+
+            // 2. Turunkan (decrement) counter 'likesCount' di dokumen postingan utama
+            batch.update(postRef, "likesCount", FieldValue.increment(-1))
+        }.await()
+    }
 }

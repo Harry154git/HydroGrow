@@ -1,43 +1,42 @@
 package com.pemrogamanmobile.hydrogrow.data.local.mapper
 
-import com.pemrogamanmobile.hydrogrow.data.local.room.converter.ChatBotTypeConverters
 import com.pemrogamanmobile.hydrogrow.data.local.room.entity.ChatBotEntity
 import com.pemrogamanmobile.hydrogrow.domain.model.ChatBot
 
 /**
- * Converts a ChatBotEntity (from the database) to a ChatBot (domain model).
+ * Mengubah ChatBotEntity (dari database) menjadi ChatBot (domain model).
  */
 fun ChatBotEntity.toDomain(): ChatBot = ChatBot(
     id = this.id,
     userOwnerId = this.userOwnerId,
     title = this.title,
-    // Type converter akan menangani konversi String JSON ke MutableList
-    conversation = ChatBotTypeConverters().toStringList(this.conversation),
+    // Ubah setiap item di List<ChatMessageEntity> menjadi ChatMessage
+    conversation = this.conversation.map { it.toDomain() }.toMutableList(),
     relatedGardenId = this.relatedGardenId,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
 )
 
 /**
- * Converts a ChatBot (domain model) to a ChatBotEntity (for the database).
+ * Mengubah ChatBot (domain model) menjadi ChatBotEntity (untuk database).
  */
 fun ChatBot.toEntity(): ChatBotEntity = ChatBotEntity(
     id = this.id,
     userOwnerId = this.userOwnerId,
     title = this.title,
-    // Type converter akan menangani konversi MutableList ke String JSON
-    conversation = ChatBotTypeConverters().fromStringList(this.conversation),
+    // Ubah setiap item di List<ChatMessage> menjadi ChatMessageEntity
+    conversation = this.conversation.map { it.toEntity() },
     relatedGardenId = this.relatedGardenId,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
 )
 
 /**
- * Converts a list of ChatBotEntity objects to a list of ChatBot domain models.
+ * Mengubah list ChatBotEntity menjadi list ChatBot domain model.
  */
 fun List<ChatBotEntity>.toDomainList(): List<ChatBot> = map { it.toDomain() }
 
 /**
- * Converts a list of ChatBot domain models to a list of ChatBotEntity objects.
+ * Mengubah list ChatBot domain model menjadi list ChatBotEntity.
  */
 fun List<ChatBot>.toEntityList(): List<ChatBotEntity> = map { it.toEntity() }

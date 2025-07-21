@@ -6,31 +6,27 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChatBotDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChat(chat: ChatBotEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChatBot(chatbot: ChatBotEntity)
+    suspend fun insertAllChats(chats: List<ChatBotEntity>)
 
     @Update
-    suspend fun updateChatBot(chatbot: ChatBotEntity)
+    suspend fun updateChat(chat: ChatBotEntity)
 
     @Delete
-    suspend fun deleteChatBot(chatbot: ChatBotEntity)
+    suspend fun deleteChat(chat: ChatBotEntity)
 
-    @Query("SELECT * FROM chatbot WHERE id = :chatbotId LIMIT 1")
-    suspend fun getChatBotById(chatbotId: String): ChatBotEntity?
+    @Query("DELETE FROM chatbot WHERE id = :chatId")
+    suspend fun deleteChatById(chatId: String)
 
-    @Query("SELECT * FROM chatbot WHERE user_owner_id = :userId")
-    fun getChatBotByUserId(userId: String): Flow<List<ChatBotEntity>>
+    @Query("SELECT * FROM chatbot WHERE id = :chatId LIMIT 1")
+    suspend fun getChatById(chatId: String): ChatBotEntity?
 
-    @Query("DELETE FROM chatbot")
-    suspend fun deleteAll()
+    @Query("SELECT * FROM chatbot WHERE userownerid = :userId ORDER BY updatedAt DESC")
+    fun getChatsByUserId(userId: String): Flow<List<ChatBotEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(chatbot: List<ChatBotEntity>)
-
-    @Transaction
-    suspend fun replaceAll(chatbot: List<ChatBotEntity>) {
-        deleteAll()
-        insertAll(chatbot)
-    }
+    @Query("DELETE FROM chatbot WHERE userownerid = :userId")
+    suspend fun deleteAllChatsByUserId(userId: String)
 }

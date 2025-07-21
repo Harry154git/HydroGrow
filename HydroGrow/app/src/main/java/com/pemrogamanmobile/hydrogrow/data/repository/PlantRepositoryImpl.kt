@@ -66,26 +66,28 @@ class PlantRepositoryImpl @Inject constructor(
      */
     override fun getPlantsByGarden(gardenId: String): Flow<List<Plant>> = flow {
         try {
+            // Ambil userId yang sedang aktif
+            val userId = getUserId()
+
             // NETWORK: Fetch latest plants from Firestore.
-            val remotePlants = firestore.getPlants(getUserId(), gardenId)
+            // Asumsi firestore.getPlants tidak berubah dan tetap butuh userId & gardenId
+            val remotePlants = firestore.getPlants(userId, gardenId)
 
             // MAP: Convert remote DTOs to local entities.
-            // Pastikan mapper `toEntity` Anda bisa menangani konversi dari DTO.
-            val entities = remotePlants.map { it.toEntity(gardenId) } // Pass gardenId if needed by the mapper
+            // PERBAIKAN: Berikan `userId` yang sudah didapat ke mapper `toEntity`.
+            val entities = remotePlants.map { dto ->
+                dto.toEntity(gardenId = gardenId, userId = userId)
+            }
 
             // SAVE: Synchronize the local database with fresh data.
-            // This operation is atomic (all or nothing).
             dao.synchronizeGardenPlants(gardenId, entities)
 
         } catch (e: Exception) {
-            // On network error, log the issue. The flow will continue and serve
-            // potentially stale data from the cache.
+            // On network error, log the issue.
             Log.w("PlantRepository", "Failed to sync plants from network: ${e.message}")
         }
 
-        // LOCAL (Single Source of Truth): Emit data from the local database.
-        // This will emit the fresh data if the network sync was successful,
-        // or the old cached data if it failed. It will also listen for any future changes.
+        // LOCAL (Single Source of Truth): Emit data dari database lokal.
         emitAll(dao.getPlantsByGardenId(gardenId).map { entities ->
             entities.map { it.toDomain() }
         })
@@ -96,5 +98,35 @@ class PlantRepositoryImpl @Inject constructor(
         // This function continues to read directly from the cache,
         // which is assumed to be up-to-date by the getPlantsByGarden logic.
         return dao.getPlantById(plantId).map { it?.toDomain() }
+    }
+
+    /**
+     * Mengimplementasikan strategi "Network-First" untuk SEMUA tanaman milik pengguna.
+     * 1. Ambil data terbaru dari Firestore.
+     * 2. Jika berhasil, sinkronkan database lokal (hapus semua data lama, masukkan data baru).
+     * 3. Jika gagal, log error.
+     * 4. Terakhir, selalu kembalikan data dari database lokal (Room) sebagai sumber kebenaran.
+     */
+    override suspend fun getAllPlants(): List<Plant> {
+        val userId = getUserId()
+        if (userId.isEmpty()) return emptyList()
+
+        try {
+            // NETWORK: Panggil service yang sudah diperbaiki.
+            // Hasilnya sudah dalam bentuk List<Plant> (Domain Model).
+            val remotePlants: List<Plant> = firestore.getAllUserPlants(userId)
+
+            // MAP: Convert dari Domain Model ke Entity untuk disimpan ke Room.
+            val entities = remotePlants.map { it.toEntity() }
+
+            // SAVE: Sinkronkan database lokal dengan data baru.
+            dao.synchronizeAllUserPlants(userId, entities)
+
+        } catch (e: Exception) {
+            Log.w("PlantRepository", "Failed to sync all plants from network: ${e.message}")
+        }
+
+        // LOCAL: Selalu kembalikan data dari database lokal.
+        return dao.getAllUserPlants(userId).map { it.toDomain() }
     }
 }

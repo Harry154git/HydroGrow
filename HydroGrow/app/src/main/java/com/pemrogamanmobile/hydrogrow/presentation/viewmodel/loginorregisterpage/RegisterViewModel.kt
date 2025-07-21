@@ -5,14 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pemrogamanmobile.hydrogrow.domain.usecase.AuthUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.auth.SignInWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val authUseCase: AuthUseCase
+    private val signInWithGoogleUseCase: SignInWithGoogleUseCase
 ) : ViewModel() {
 
     var email by mutableStateOf("")
@@ -47,7 +47,7 @@ class RegisterViewModel @Inject constructor(
             isLoading = true
             errorMessage = null
 
-            val result = authUseCase.register(email, password)
+            val result = signInWithGoogleUseCase.register(email, password)
             result.onSuccess {
                 registerSuccess = true
             }.onFailure {

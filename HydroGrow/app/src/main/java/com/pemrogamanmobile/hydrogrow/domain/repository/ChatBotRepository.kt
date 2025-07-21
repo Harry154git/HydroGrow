@@ -1,22 +1,50 @@
 package com.pemrogamanmobile.hydrogrow.domain.repository
 
+import android.net.Uri
 import com.pemrogamanmobile.hydrogrow.domain.model.ChatBot
-import com.pemrogamanmobile.hydrogrow.util.Resource // Asumsi Anda punya sealed class ini
+import com.pemrogamanmobile.hydrogrow.domain.model.ChatMessage
+import com.pemrogamanmobile.hydrogrow.util.Resource
 import kotlinx.coroutines.flow.Flow
 
 interface ChatBotRepository {
-    /**
-     * Mengambil satu sesi chat dengan strategi network-first.
-     */
-    fun getChatSession(sessionId: String): Flow<Resource<ChatBot>>
 
     /**
-     * Menyimpan atau memperbarui sesi chat ke Room dan Firestore.
+     * Mengambil seluruh riwayat percakapan untuk pengguna saat ini.
+     * Menerapkan strategi cache network-first.
+     * @return Flow yang memancarkan status loading, error, atau sukses dengan daftar ChatBot.
      */
-    suspend fun saveChatSession(session: ChatBot): Result<Unit>
+    fun getChatHistory(): Flow<Resource<List<ChatBot>>>
+
+    // Di dalam interface ChatBotRepository
+    fun getChatById(chatId: String): Flow<Resource<ChatBot>>
 
     /**
-     * Mengirim prompt ke Gemini API dan mengembalikan HANYA teks responsnya.
+     * Menambahkan sesi percakapan baru ke database lokal dan Firestore.
+     * @param chat Objek ChatBot yang akan dibuat.
+     * @return Resource yang menandakan sukses atau gagal.
      */
-    suspend fun getAiAnalysis(prompt: String): Result<String>
+    suspend fun addChat(chat: ChatBot): Resource<Unit>
+
+    /**
+     * Memperbarui sesi percakapan yang sudah ada.
+     * @param chat Objek ChatBot dengan data yang sudah diperbarui.
+     * @return Resource yang menandakan sukses atau gagal.
+     */
+    suspend fun updateChat(chat: ChatBot): Resource<Unit>
+
+    /**
+     * Menambahkan pesan baru (teks dan/atau gambar) ke sebuah sesi percakapan.
+     * @param chatId ID dari percakapan yang akan ditambahkan pesannya.
+     * @param message Objek pesan teks dari pengguna.
+     * @param imageUri (Opsional) URI dari gambar yang akan diunggah.
+     * @return Resource yang menandakan sukses atau gagal.
+     */
+    suspend fun addMessageToChat(chatId: String, message: ChatMessage, imageUri: Uri?): Resource<Unit>
+
+    /**
+     * Menghapus sebuah sesi percakapan dari database lokal dan Firestore.
+     * @param chatId ID dari percakapan yang akan dihapus.
+     * @return Resource yang menandakan sukses atau gagal.
+     */
+    suspend fun deleteChat(chatId: String): Resource<Unit>
 }

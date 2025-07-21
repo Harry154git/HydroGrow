@@ -6,7 +6,7 @@ data class Posting(
     val userOwnerName: String,
     val userOwnerProfileUrl: String?,
     val imageUrl: String?,
-    val likes: String,
+    val likes: Int,
     val comments: List<Comment>,
     val createdAt: Long,
     val updatedAt: Long

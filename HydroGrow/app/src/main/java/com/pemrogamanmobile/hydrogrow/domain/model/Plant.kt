@@ -5,5 +5,8 @@ data class Plant(
     val plantName: String,
     val harvestTime: String,
     val gardenOwnerId: String,
-    val imageUrl: String?
+    val userOwnerId: String, // <-- TAMBAHAN
+    val imageUrl: String?,
+    val plantingTime: Long, // Waktu tanam dalam Linux timestamp (milidetik)
+    val cupAmount: Int      // Jumlah cup per tanaman
 )

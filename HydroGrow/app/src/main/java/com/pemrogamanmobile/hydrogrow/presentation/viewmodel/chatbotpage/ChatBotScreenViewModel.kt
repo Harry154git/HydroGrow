@@ -2,7 +2,7 @@ package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.chatbotpage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pemrogamanmobile.hydrogrow.domain.usecase.geminiai.ChatBotUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.ai.ChatBotUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

@@ -28,7 +28,7 @@ data class PostingDto(
 
     @get:PropertyName("likes")
     @set:PropertyName("likes")
-    var likes: String = "0",
+    var likes: Int = 0,
 
     @get:PropertyName("comments")
     @set:PropertyName("comments")

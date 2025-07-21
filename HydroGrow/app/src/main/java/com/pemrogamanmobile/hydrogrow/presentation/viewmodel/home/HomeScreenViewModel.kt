@@ -2,9 +2,8 @@ package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pemrogamanmobile.hydrogrow.domain.usecase.GardenUseCase
-import com.pemrogamanmobile.hydrogrow.domain.usecase.PlantUseCase
-import com.pemrogamanmobile.hydrogrow.domain.usecase.UserUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.garden.GardenUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.plant.PlantUseCase
 import com.pemrogamanmobile.hydrogrow.presentation.mapper.toUi
 import com.pemrogamanmobile.hydrogrow.presentation.model.GardenUi
 import com.pemrogamanmobile.hydrogrow.presentation.model.PlantUi

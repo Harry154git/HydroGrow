@@ -1,4 +1,4 @@
-package com.pemrogamanmobile.hydrogrow.domain.usecase
+package com.pemrogamanmobile.hydrogrow.domain.usecase.garden
 
 import android.net.Uri
 import com.pemrogamanmobile.hydrogrow.domain.model.Garden

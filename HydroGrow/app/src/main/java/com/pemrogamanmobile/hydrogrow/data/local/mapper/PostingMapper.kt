@@ -1,6 +1,7 @@
 package com.pemrogamanmobile.hydrogrow.data.local.mapper
 
 import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PostingEntity
+import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PostingWithComments
 import com.pemrogamanmobile.hydrogrow.domain.model.Posting
 
 /**
@@ -34,6 +35,28 @@ fun Posting.toEntity(): PostingEntity = PostingEntity(
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
 )
+
+/**
+ * Mengubah objek relasi PostingWithComments (dari database lokal)
+ * menjadi objek domain Posting yang bersih.
+ */
+fun PostingWithComments.toDomain(): Posting {
+    return Posting(
+        // Ambil properti utama dari `posting` (PostingEntity)
+        id = this.posting.id,
+        userOwnerId = this.posting.userOwnerId,
+        userOwnerName = this.posting.userOwnerName,
+        userOwnerProfileUrl = this.posting.userOwnerProfileUrl,
+        imageUrl = this.posting.imageUrl,
+        likes = this.posting.likes,
+        createdAt = this.posting.createdAt,
+        updatedAt = this.posting.updatedAt,
+
+        // Ambil daftar komentar, lalu konversi juga ke domain model
+        // Ini akan memanggil mapper `List<CommentEntity>.toDomain()` yang sudah ada
+        comments = this.comments.toDomain()
+    )
+}
 
 /**
  * Mengubah daftar PostingEntity menjadi daftar domain model Posting.

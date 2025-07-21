@@ -4,12 +4,14 @@ import com.pemrogamanmobile.hydrogrow.data.repository.GardenRepositoryImpl
 import com.pemrogamanmobile.hydrogrow.data.repository.ChatBotRepositoryImpl
 import com.pemrogamanmobile.hydrogrow.data.repository.PlantRepositoryImpl
 import com.pemrogamanmobile.hydrogrow.data.repository.PreferencesRepositoryImpl
-import com.pemrogamanmobile.hydrogrow.data.repository.UserRepositoryImpl
+import com.pemrogamanmobile.hydrogrow.data.repository.AuthRepositoryImpl
+import com.pemrogamanmobile.hydrogrow.data.repository.PostingRepositoryImpl
 import com.pemrogamanmobile.hydrogrow.domain.repository.GardenRepository
 import com.pemrogamanmobile.hydrogrow.domain.repository.ChatBotRepository
 import com.pemrogamanmobile.hydrogrow.domain.repository.PlantRepository
 import com.pemrogamanmobile.hydrogrow.domain.repository.PreferencesRepository
-import com.pemrogamanmobile.hydrogrow.domain.repository.UserRepository
+import com.pemrogamanmobile.hydrogrow.domain.repository.AuthRepository
+import com.pemrogamanmobile.hydrogrow.domain.repository.PostingRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -35,8 +37,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindUserRepository(
-        impl: UserRepositoryImpl
-    ): UserRepository
+        impl: AuthRepositoryImpl
+    ): AuthRepository
 
     @Binds
     @Singleton
@@ -49,5 +51,11 @@ abstract class AppModule {
     abstract fun bindPreferencesRepository(
         impl: PreferencesRepositoryImpl
     ): PreferencesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPostingRepository(
+        postingRepositoryImpl: PostingRepositoryImpl
+    ): PostingRepository
 
 }
