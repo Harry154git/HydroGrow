@@ -16,7 +16,6 @@ import java.io.File
 import javax.inject.Inject
 
 class AiRepositoryImpl @Inject constructor(
-    // Dependensi HANYA untuk layanan API
     private val geminiApi: GeminiApiService,
     private val plantApi: PlantNetApiService
 ) : AiRepository {

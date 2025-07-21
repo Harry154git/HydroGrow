@@ -1,17 +1,7 @@
 package com.pemrogamanmobile.hydrogrow.di
 
-import com.pemrogamanmobile.hydrogrow.data.repository.GardenRepositoryImpl
-import com.pemrogamanmobile.hydrogrow.data.repository.ChatBotRepositoryImpl
-import com.pemrogamanmobile.hydrogrow.data.repository.PlantRepositoryImpl
-import com.pemrogamanmobile.hydrogrow.data.repository.PreferencesRepositoryImpl
-import com.pemrogamanmobile.hydrogrow.data.repository.AuthRepositoryImpl
-import com.pemrogamanmobile.hydrogrow.data.repository.PostingRepositoryImpl
-import com.pemrogamanmobile.hydrogrow.domain.repository.GardenRepository
-import com.pemrogamanmobile.hydrogrow.domain.repository.ChatBotRepository
-import com.pemrogamanmobile.hydrogrow.domain.repository.PlantRepository
-import com.pemrogamanmobile.hydrogrow.domain.repository.PreferencesRepository
-import com.pemrogamanmobile.hydrogrow.domain.repository.AuthRepository
-import com.pemrogamanmobile.hydrogrow.domain.repository.PostingRepository
+import com.pemrogamanmobile.hydrogrow.data.repository.*
+import com.pemrogamanmobile.hydrogrow.domain.repository.*
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -20,42 +10,39 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class AppModule {
+abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindGardenRepository(
-        impl: GardenRepositoryImpl
-    ): GardenRepository
+    abstract fun bindGardenRepository(impl: GardenRepositoryImpl): GardenRepository
 
     @Binds
     @Singleton
-    abstract fun bindGeminiRepository(
-        impl: ChatBotRepositoryImpl
-    ): ChatBotRepository
+    abstract fun bindChatBotRepository(impl: ChatBotRepositoryImpl): ChatBotRepository
 
     @Binds
     @Singleton
-    abstract fun bindUserRepository(
-        impl: AuthRepositoryImpl
-    ): AuthRepository
+    abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
 
     @Binds
     @Singleton
-    abstract fun bindPlantRepository(
-        impl: PlantRepositoryImpl
-    ): PlantRepository
+    abstract fun bindPlantRepository(impl: PlantRepositoryImpl): PlantRepository
 
     @Binds
     @Singleton
-    abstract fun bindPreferencesRepository(
-        impl: PreferencesRepositoryImpl
-    ): PreferencesRepository
+    abstract fun bindPreferencesRepository(impl: PreferencesRepositoryImpl): PreferencesRepository
 
     @Binds
     @Singleton
-    abstract fun bindPostingRepository(
-        postingRepositoryImpl: PostingRepositoryImpl
-    ): PostingRepository
+    abstract fun bindPostingRepository(impl: PostingRepositoryImpl): PostingRepository
 
+    // --- TAMBAHKAN DUA BLOK INI ---
+    @Binds
+    @Singleton
+    abstract fun bindGameRepository(impl: GameRepositoryImpl): GameRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAiRepository(impl: AiRepositoryImpl): AiRepository
+    // ---------------------------------
 }

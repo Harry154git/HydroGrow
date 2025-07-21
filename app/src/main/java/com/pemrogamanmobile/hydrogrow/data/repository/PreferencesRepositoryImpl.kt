@@ -10,7 +10,7 @@ class PreferencesRepositoryImpl @Inject constructor(
     private val preferenceManager: PreferenceManager
 ) : PreferencesRepository {
 
-    override val onboardingCompleted: Flow<Boolean>
+    override val cachedOnboardingState: Flow<Boolean>
         get() = preferenceManager.onboardingCompletedFlow
 
     override suspend fun setOnboardingCompleted(completed: Boolean) {

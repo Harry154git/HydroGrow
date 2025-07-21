@@ -1,13 +1,11 @@
-package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.loginorregisterpage
+package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.loginpage
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.pemrogamanmobile.hydrogrow.domain.usecase.auth.SignInWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,24 +39,24 @@ class LoginViewModel @Inject constructor(
         return true
     }
 
-    fun login() {
-        if (!validate()) return
-
-        viewModelScope.launch {
-            isLoading = true
-            errorMessage = null
-            try {
-                val user = signInWithGoogleUseCase.login(email, password)
-                if (user != null) {
-                    successLogin = true
-                } else {
-                    errorMessage = "Login gagal, coba periksa kembali email dan password"
-                }
-            } catch (e: Exception) {
-                errorMessage = e.message ?: "Terjadi kesalahan tidak diketahui"
-            } finally {
-                isLoading = false
-            }
-        }
-    }
+//    fun login() {
+//        if (!validate()) return
+//
+//        viewModelScope.launch {
+//            isLoading = true
+//            errorMessage = null
+//            try {
+//                val user = signInWithGoogleUseCase.SignInWithGoogleUseCase(email, password)
+//                if (user != null) {
+//                    successLogin = true
+//                } else {
+//                    errorMessage = "Login gagal, coba periksa kembali email dan password"
+//                }
+//            } catch (e: Exception) {
+//                errorMessage = e.message ?: "Terjadi kesalahan tidak diketahui"
+//            } finally {
+//                isLoading = false
+//            }
+//        }
+//    }
 }

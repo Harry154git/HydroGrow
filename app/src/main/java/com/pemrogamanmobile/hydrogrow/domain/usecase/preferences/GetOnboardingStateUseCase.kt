@@ -6,5 +6,5 @@ import javax.inject.Inject
 class GetOnboardingStateUseCase @Inject constructor(
     private val repository: PreferencesRepository
 ) {
-    operator fun invoke() = repository.cachedOnboardingState // Ganti nama di repo agar lebih jelas
+    operator fun invoke() = repository.cachedOnboardingState
 }

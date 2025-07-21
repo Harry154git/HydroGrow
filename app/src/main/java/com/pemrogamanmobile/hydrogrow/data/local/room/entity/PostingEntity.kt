@@ -2,7 +2,7 @@ package com.pemrogamanmobile.hydrogrow.data.local.room.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.pemrogamanmobile.hydrogrow.domain.model.Comment
+// Hapus import com.pemrogamanmobile.hydrogrow.domain.model.Comment
 
 @Entity(tableName = "posting")
 data class PostingEntity(
@@ -14,6 +14,6 @@ data class PostingEntity(
     val imageUrl: String?,
     val likes: Int,
     val createdAt: Long,
-    val updatedAt: Long,
-    val comments: List<Comment>
+    val updatedAt: Long
+    // val comments: List<Comment>  <-- BARIS INI DIHAPUS
 )

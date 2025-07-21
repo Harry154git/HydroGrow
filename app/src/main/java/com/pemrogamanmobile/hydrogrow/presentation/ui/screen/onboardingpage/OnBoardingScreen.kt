@@ -15,53 +15,53 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.onboardingpage.TampilanViewModel
+import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.onboardingpage.OnboardingScreenViewModel
 
 @Composable
 fun OnBoardingScreen(
-    viewModel: TampilanViewModel = hiltViewModel(),
+    viewModel: OnboardingScreenViewModel = hiltViewModel(),
     onSkip: () -> Unit,
     onLogin: () -> Unit
 ) {
-    val tipsImages = viewModel.tipsImages
-    var currentPage by remember { mutableStateOf(0) }
-    val lastPage = tipsImages.size - 1
-
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        Image(
-            painter = painterResource(id = tipsImages[currentPage]),
-            contentDescription = "Onboarding Image",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 80.dp)
-        )
-
-
-        Button(
-            onClick = { onSkip() },
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(16.dp)
-        ) {
-            Text("Lewati")
-        }
-
-        Button(
-            onClick = {
-                if (currentPage == lastPage) {
-                    onLogin()
-                } else {
-                    currentPage++
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Text(if (currentPage == lastPage) "Login" else "Next")
-        }
-    }
+//    val tipsImages = viewModel.tipsImages
+//    var currentPage by remember { mutableStateOf(0) }
+//    val lastPage = tipsImages.size - 1
+//
+//    Box(modifier = Modifier.fillMaxSize()) {
+//
+//        Image(
+//            painter = painterResource(id = tipsImages[currentPage]),
+//            contentDescription = "Onboarding Image",
+//            contentScale = ContentScale.Crop,
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(bottom = 80.dp)
+//        )
+//
+//
+//        Button(
+//            onClick = { onSkip() },
+//            modifier = Modifier
+//                .align(Alignment.BottomStart)
+//                .padding(16.dp)
+//        ) {
+//            Text("Lewati")
+//        }
+//
+//        Button(
+//            onClick = {
+//                if (currentPage == lastPage) {
+//                    onLogin()
+//                } else {
+//                    currentPage++
+//                }
+//            },
+//            modifier = Modifier
+//                .align(Alignment.BottomEnd)
+//                .padding(16.dp)
+//        ) {
+//            Text(if (currentPage == lastPage) "Login" else "Next")
+//        }
+//    }
 }
 

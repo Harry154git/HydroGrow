@@ -15,13 +15,13 @@ class OnboardingScreenViewModel @Inject constructor(
     private val onboardingRepository: PreferencesRepository
 ) : ViewModel() {
 
-    val onboardingCompleted: StateFlow<Boolean?> =
-        onboardingRepository.onboardingCompleted
-            .stateIn(viewModelScope, SharingStarted.Lazily, null)
-
-    fun setOnboardingCompleted() {
-        viewModelScope.launch {
-            onboardingRepository.setOnboardingCompleted(true)
-        }
-    }
+//    val onboardingCompleted: StateFlow<Boolean?> =
+//        onboardingRepository.onboardingCompleted
+//            .stateIn(viewModelScope, SharingStarted.Lazily, null)
+//
+//    fun setOnboardingCompleted() {
+//        viewModelScope.launch {
+//            onboardingRepository.setOnboardingCompleted(true)
+//        }
+//    }
 }

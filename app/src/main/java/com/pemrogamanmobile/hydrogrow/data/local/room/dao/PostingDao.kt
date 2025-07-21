@@ -2,7 +2,7 @@ package com.pemrogamanmobile.hydrogrow.data.local.room.dao
 
 import androidx.room.*
 import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PostingEntity
-import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PostingWithComments
+import com.pemrogamanmobile.hydrogrow.data.local.room.relation.PostingWithComments
 import kotlinx.coroutines.flow.Flow
 
 @Dao

@@ -1,3 +1,5 @@
+// File: di/ProvideModule.kt
+
 package com.pemrogamanmobile.hydrogrow.di
 
 import android.app.Application
@@ -7,38 +9,34 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.pemrogamanmobile.hydrogrow.data.local.datastore.PreferenceManager
 import com.pemrogamanmobile.hydrogrow.data.local.room.AppDatabase
-import com.pemrogamanmobile.hydrogrow.data.local.room.dao.GardenDao
-import com.pemrogamanmobile.hydrogrow.data.local.room.dao.PlantDao
+import com.pemrogamanmobile.hydrogrow.data.local.room.dao.*
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.AuthService
-import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.ChatBotService
-import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.GameService
-import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.GardenService
-import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.PlantService
-import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.PostingService
+import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.firestoreservices.*
 import com.pemrogamanmobile.hydrogrow.data.remote.service.gemini.GeminiApiClient
 import com.pemrogamanmobile.hydrogrow.data.remote.service.gemini.GeminiApiService
-import com.pemrogamanmobile.hydrogrow.domain.repository.GardenRepository
-import com.pemrogamanmobile.hydrogrow.domain.repository.PlantRepository
-import com.pemrogamanmobile.hydrogrow.domain.usecase.garden.GardenUseCase
-import com.pemrogamanmobile.hydrogrow.domain.usecase.plant.PlantUseCase
+import com.pemrogamanmobile.hydrogrow.data.remote.service.plantnet.PlantNetApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-public class ProvideModule {
+object ProvideModule {
+
+    // ... (provider untuk Database, DAO, Firebase, dll. tetap sama) ...
     @Provides
     @Singleton
     fun provideDatabase(app: Application): AppDatabase {
-        return Room.databaseBuilder(
-            app,
-            AppDatabase::class.java,
-            "hydrogrow_db"
-        ).fallbackToDestructiveMigration()
+        return Room.databaseBuilder(app, AppDatabase::class.java, "hydrogrow_db")
+            .fallbackToDestructiveMigration()
             .build()
     }
 
@@ -47,6 +45,12 @@ public class ProvideModule {
 
     @Provides
     fun providePlantDao(db: AppDatabase): PlantDao = db.plantDao()
+
+    @Provides
+    fun provideChatBotDao(db: AppDatabase): ChatBotDao = db.chatBotDao()
+
+    @Provides
+    fun provideGameDao(db: AppDatabase): GameDao = db.gameDao()
 
     @Provides
     @Singleton
@@ -60,13 +64,11 @@ public class ProvideModule {
 
     @Provides
     @Singleton
-    fun provideAuthService(auth: FirebaseAuth): AuthService {
-        return AuthService(auth)
-    }
+    fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
 
     @Provides
     @Singleton
-    fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
+    fun provideAuthService(auth: FirebaseAuth): AuthService = AuthService(auth)
 
     @Provides
     @Singleton
@@ -88,6 +90,7 @@ public class ProvideModule {
     @Singleton
     fun providePlantService(db: FirebaseFirestore): PlantService = PlantService(db)
 
+    // --- Remote API Service Providers ---
     @Provides
     @Singleton
     fun provideGeminiApiService(): GeminiApiService {
@@ -95,16 +98,26 @@ public class ProvideModule {
         return GeminiApiClient.create(apiKey)
     }
 
+    // --- TAMBAHKAN BLOK INI UNTUK PLANTNET ---
     @Provides
     @Singleton
-    fun provideGardenUseCase(repository: GardenRepository): GardenUseCase {
-        return GardenUseCase(repository)
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+            .connectTimeout(120, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
+            .build()
     }
 
     @Provides
     @Singleton
-    fun providePlantUseCase(repository: PlantRepository): PlantUseCase {
-        return PlantUseCase(repository)
+    fun providePlantNetApiService(client: OkHttpClient): PlantNetApiService {
+        return Retrofit.Builder()
+            .baseUrl("https://my-api.plantnet.org/") // Base URL untuk Pl@ntNet API
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+            .build()
+            .create(PlantNetApiService::class.java)
     }
-
+    // ------------------------------------------
 }

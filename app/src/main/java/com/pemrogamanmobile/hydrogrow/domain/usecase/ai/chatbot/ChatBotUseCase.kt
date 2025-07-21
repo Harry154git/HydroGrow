@@ -16,7 +16,7 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.firstOrNull
 
-class ChatUseCase @Inject constructor(
+class ChatBotUseCase @Inject constructor(
     private val chatRepository: ChatBotRepository,
     private val aiRepository: AiRepository,
     private val gardenRepository: GardenRepository,

@@ -12,8 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.topbar.TopBarApp
-import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.loginorregisterpage.LoginScreen
-import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.loginorregisterpage.RegisterScreen
+import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.loginpage.LoginScreen
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.onboardingpage.OnBoardingScreen
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.home.HomeScreen
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.profilpage.ProfileScreen
@@ -28,13 +27,12 @@ import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.settingspage.Settin
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.chatbotpage.ChatBotScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.onboardingpage.OnboardingScreenViewModel
 import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.profilpage.ProfileViewModel
 
 @Composable
 fun AppNav() {
     val navController: NavHostController = rememberNavController()
-    val onboardingViewModel: OnboardingScreenViewModel = hiltViewModel()
+    val onboardingViewModel: AppNavViewModel = hiltViewModel()
     val onboardingCompleted = onboardingViewModel.onboardingCompleted.collectAsStateWithLifecycle()
 
     if (onboardingCompleted.value == null) {
@@ -75,18 +73,6 @@ fun AppNav() {
                         },
                         onNavigateToRegister = {
                             navController.navigate("register")
-                        }
-                    )
-                }
-            }
-
-            composable("register") {
-                WithTopBar(navController) {
-                    RegisterScreen(
-                        onRegisterSuccess = {
-                            navController.navigate("login") {
-                                popUpTo("register") { inclusive = true }
-                            }
                         }
                     )
                 }

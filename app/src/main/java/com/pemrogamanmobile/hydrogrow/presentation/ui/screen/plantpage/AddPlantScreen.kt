@@ -46,77 +46,77 @@ fun AddPlantScreen(
 
         Text("Pilih Kebun:")
 
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
-            TextField(
-                value = state.availableGardens.find { it.id == state.selectedGardenId }?.gardenName ?: "Pilih Kebun",
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
-            )
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                state.availableGardens.forEach { kebun ->
-                    DropdownMenuItem(
-                        text = { Text(kebun.gardenName) },
-                        onClick = {
-                            viewModel.onGardenSelected(kebun.id)
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = state.plantName,
-            onValueChange = { viewModel.onPlantNameChange(it) },
-            label = { Text("Jenis Tanaman") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = state.nutrientsUsed,
-            onValueChange = { viewModel.onNutrientsChange(it) },
-            label = { Text("Nutrisi yang Dipakai") },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.nutrientLocked
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = state.harvestTime,
-            onValueChange = { viewModel.onHarvestTimeChange(it) },
-            label = { Text("Masa Panen") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                viewModel.savePlant(
-                    onSuccess = { onBack() },
-                    onError = { message ->
-                        Toast.makeText(context, message ?: "Terjadi kesalahan", Toast.LENGTH_LONG).show()
-                    }
-                )
-            },
-            enabled = !state.isLoading,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text("Simpan")
-        }
+//        ExposedDropdownMenuBox(
+//            expanded = expanded,
+//            onExpandedChange = { expanded = !expanded }
+//        ) {
+//            TextField(
+//                value = state.availableGardens.find { it.id == state.selectedGardenId }?.gardenName ?: "Pilih Kebun",
+//                onValueChange = {},
+//                readOnly = true,
+//                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+//                modifier = Modifier.menuAnchor().fillMaxWidth()
+//            )
+//            DropdownMenu(
+//                expanded = expanded,
+//                onDismissRequest = { expanded = false }
+//            ) {
+//                state.availableGardens.forEach { kebun ->
+//                    DropdownMenuItem(
+//                        text = { Text(kebun.gardenName) },
+//                        onClick = {
+//                            viewModel.onGardenSelected(kebun.id)
+//                            expanded = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//        OutlinedTextField(
+//            value = state.plantName,
+//            onValueChange = { viewModel.onPlantNameChange(it) },
+//            label = { Text("Jenis Tanaman") },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        OutlinedTextField(
+//            value = state.nutrientsUsed,
+//            onValueChange = { viewModel.onNutrientsChange(it) },
+//            label = { Text("Nutrisi yang Dipakai") },
+//            modifier = Modifier.fillMaxWidth(),
+//            enabled = !state.nutrientLocked
+//        )
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        OutlinedTextField(
+//            value = state.harvestTime,
+//            onValueChange = { viewModel.onHarvestTimeChange(it) },
+//            label = { Text("Masa Panen") },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//        Button(
+//            onClick = {
+//                viewModel.savePlant(
+//                    onSuccess = { onBack() },
+//                    onError = { message ->
+//                        Toast.makeText(context, message ?: "Terjadi kesalahan", Toast.LENGTH_LONG).show()
+//                    }
+//                )
+//            },
+//            enabled = !state.isLoading,
+//            modifier = Modifier.align(Alignment.CenterHorizontally)
+//        ) {
+//            Text("Simpan")
+//        }
     }
 }
 

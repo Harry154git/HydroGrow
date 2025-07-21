@@ -18,10 +18,11 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.ktx.Firebase
 import androidx.core.os.bundleOf
+import com.pemrogamanmobile.hydrogrow.domain.usecase.auth.GetCurrentUserUseCase
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val userUseCase: UserUseCase,
+    private val authUseCase: GetCurrentUserUseCase,
     private val gardenUseCase: GardenUseCase,
     private val plantUseCase: PlantUseCase
 ) : ViewModel() {
@@ -52,48 +53,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun loadData() {
-        viewModelScope.launch {
-            val userId = userUseCase.getCurrentUserId()
-            android.util.Log.d("HomeVM", "UserId: $userId")
-
-            if (userId.isNullOrEmpty()) {
-                _uiState.update { it.copy(error = "User not logged in") }
-                return@launch
-            }
-
-            // Load user profile
-            launch {
-                userUseCase.getProfile()
-                    .map { user ->
-                        android.util.Log.d("HomeVM", "User profile raw: $user")
-                        user?.toUi()
-                    }
-                    .catch { e ->
-                        android.util.Log.e("HomeVM", "Error getProfile: ${e.message}")
-                        _uiState.update { it.copy(error = e.message ?: "Failed to load user") }
-                    }
-                    .collect { userUi ->
-                        android.util.Log.d("HomeVM", "Mapped userUi: $userUi")
-                        _uiState.update { it.copy(user = userUi) }
-                    }
-            }
-
-            // Load gardens
-            gardenUseCase.getGardensByUserId(userId)
-                .map { gardens ->
-                    android.util.Log.d("HomeVM", "Gardens raw: $gardens")
-                    gardens.map { it.toUi() }
-                }
-                .catch { e ->
-                    android.util.Log.e("HomeVM", "Error getGardens: ${e.message}")
-                    _uiState.update { it.copy(error = e.message ?: "Failed to load gardens") }
-                }
-                .collect { gardenUiList ->
-                    android.util.Log.d("HomeVM", "Mapped gardenUiList: $gardenUiList")
-                    _uiState.update { it.copy(gardens = gardenUiList) }
-                    loadPlantsForGardens(gardenUiList)
-                }
-        }
+        // nanti ya
     }
 
     private suspend fun loadPlantsForGardens(gardenUiList: List<GardenUi>) {

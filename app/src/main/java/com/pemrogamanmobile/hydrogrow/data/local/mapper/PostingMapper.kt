@@ -1,12 +1,10 @@
 package com.pemrogamanmobile.hydrogrow.data.local.mapper
 
 import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PostingEntity
-import com.pemrogamanmobile.hydrogrow.data.local.room.entity.PostingWithComments
+import com.pemrogamanmobile.hydrogrow.data.local.room.relation.PostingWithComments
 import com.pemrogamanmobile.hydrogrow.domain.model.Posting
 
-/**
- * Mengubah PostingEntity dari database menjadi domain model Posting.
- */
+// BENAR: Mengubah PostingEntity menjadi Posting (dengan daftar komentar kosong)
 fun PostingEntity.toDomain(): Posting = Posting(
     id = this.id,
     userOwnerId = this.userOwnerId,
@@ -14,15 +12,12 @@ fun PostingEntity.toDomain(): Posting = Posting(
     userOwnerProfileUrl = this.userOwnerProfileUrl,
     imageUrl = this.imageUrl,
     likes = this.likes,
-    // Langsung ambil daftar komentar dari entity
-    comments = this.comments,
+    comments = emptyList(), // Penting!
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
 )
 
-/**
- * Mengubah domain model Posting menjadi PostingEntity untuk disimpan ke database.
- */
+// BENAR: Mengubah Posting menjadi PostingEntity (tanpa menyertakan komentar)
 fun Posting.toEntity(): PostingEntity = PostingEntity(
     id = this.id,
     userOwnerId = this.userOwnerId,
@@ -30,19 +25,13 @@ fun Posting.toEntity(): PostingEntity = PostingEntity(
     userOwnerProfileUrl = this.userOwnerProfileUrl,
     imageUrl = this.imageUrl,
     likes = this.likes,
-    // Simpan juga daftar komentar ke dalam entity
-    comments = this.comments,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
 )
 
-/**
- * Mengubah objek relasi PostingWithComments (dari database lokal)
- * menjadi objek domain Posting yang bersih.
- */
+// BENAR: Fungsi ini adalah cara utama untuk mendapatkan Posting lengkap dari Room
 fun PostingWithComments.toDomain(): Posting {
     return Posting(
-        // Ambil properti utama dari `posting` (PostingEntity)
         id = this.posting.id,
         userOwnerId = this.posting.userOwnerId,
         userOwnerName = this.posting.userOwnerName,
@@ -51,19 +40,10 @@ fun PostingWithComments.toDomain(): Posting {
         likes = this.posting.likes,
         createdAt = this.posting.createdAt,
         updatedAt = this.posting.updatedAt,
-
-        // Ambil daftar komentar, lalu konversi juga ke domain model
-        // Ini akan memanggil mapper `List<CommentEntity>.toDomain()` yang sudah ada
-        comments = this.comments.toDomain()
+        comments = this.comments.toDomain() // Asumsi: ada mapper List<CommentEntity>.toDomain()
     )
 }
 
-/**
- * Mengubah daftar PostingEntity menjadi daftar domain model Posting.
- */
+// Fungsi list ini akan otomatis benar setelah fungsi tunggalnya diperbaiki
 fun List<PostingEntity>.toDomain(): List<Posting> = map { it.toDomain() }
-
-/**
- * Mengubah daftar domain model Posting menjadi daftar PostingEntity.
- */
 fun List<Posting>.toEntity(): List<PostingEntity> = map { it.toEntity() }

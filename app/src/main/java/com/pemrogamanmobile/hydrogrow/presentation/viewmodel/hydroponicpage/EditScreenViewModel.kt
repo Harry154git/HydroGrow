@@ -2,7 +2,7 @@ package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.hydroponicpage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pemrogamanmobile.hydrogrow.data.repository.GardenUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.garden.GardenUseCase
 import com.pemrogamanmobile.hydrogrow.presentation.model.GardenUi
 import com.pemrogamanmobile.hydrogrow.presentation.ui.uistate.GardenUiState
 import com.pemrogamanmobile.hydrogrow.presentation.mapper.toDomain

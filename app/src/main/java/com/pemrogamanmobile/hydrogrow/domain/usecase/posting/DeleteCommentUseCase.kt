@@ -4,12 +4,13 @@ import com.pemrogamanmobile.hydrogrow.domain.model.Comment
 import com.pemrogamanmobile.hydrogrow.domain.repository.PostingRepository
 import javax.inject.Inject
 
+/**
+ * Use case untuk menghapus komentar.
+ */
 class DeleteCommentUseCase @Inject constructor(
     private val repository: PostingRepository
 ) {
-    /**
-     * Menjalankan aksi untuk menghapus sebuah komentar.
-     * @param comment Objek Comment yang akan dihapus.
-     */
-    suspend operator fun invoke(comment: Comment) = repository.deleteComment(comment)
+    suspend operator fun invoke(comment: Comment) {
+        repository.deleteComment(comment)
+    }
 }
