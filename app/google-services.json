@@ -14,15 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "838621209796-6479u3hbfctbaifenldfteouvdut73lq.apps.googleusercontent.com",
+          "client_id": "838621209796-19gcfe59dmble01eicaph416csqctqb5.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.pemrogamanmobile.hydrogrow",
-            "certificate_hash": "b811d0a42a103b05477713fe5d9d9ae88a6f281e"
+            "certificate_hash": "c2eb55db253ed8f20baf20c0c4c311389cf3fa7c"
           }
         },
         {
-          "client_id": "838621209796-ma092p12524tb5d7sok4ca7gg1ok95o3.apps.googleusercontent.com",
+          "client_id": "838621209796-qqcs1imj5ujp9j3hcq1aru4tb1kb7pmi.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -35,7 +35,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "838621209796-ma092p12524tb5d7sok4ca7gg1ok95o3.apps.googleusercontent.com",
+              "client_id": "838621209796-qqcs1imj5ujp9j3hcq1aru4tb1kb7pmi.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

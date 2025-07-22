@@ -115,4 +115,6 @@ dependencies {
 
     implementation(libs.firebase.messaging.ktx)
 
+    implementation("androidx.compose.material:material-icons-extended-android:1.6.8")
+
 }

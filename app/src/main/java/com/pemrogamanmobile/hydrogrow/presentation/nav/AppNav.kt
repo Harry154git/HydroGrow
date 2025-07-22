@@ -42,7 +42,7 @@ fun AppNav() {
         }
     } else {
         // Tentukan startDestination
-        val startDestination = if (onboardingCompleted.value == true) "login" else "onboarding"
+        val startDestination = "login"//if (onboardingCompleted.value == true) "login" else "onboarding"
 
         NavHost(
             navController = navController,
@@ -50,16 +50,16 @@ fun AppNav() {
         ) {
             composable("onboarding") {
                 OnBoardingScreen(
-                    onSkip = {
-                        navController.navigate("login") {
-                            popUpTo("onboarding") { inclusive = true }
-                        }
-                    },
-                    onLogin = {
-                        navController.navigate("login") {
-                            popUpTo("onboarding") { inclusive = true }
-                        }
-                    }
+//                    onSkip = {
+//                        navController.navigate("login") {
+//                            popUpTo("onboarding") { inclusive = true }
+//                        }
+//                    },
+//                    onLogin = {
+//                        navController.navigate("login") {
+//                            popUpTo("onboarding") { inclusive = true }
+//                        }
+//                    }
                 )
             }
 
@@ -70,9 +70,6 @@ fun AppNav() {
                             navController.navigate("home") {
                                 popUpTo("login") { inclusive = true }
                             }
-                        },
-                        onNavigateToRegister = {
-                            navController.navigate("register")
                         }
                     )
                 }

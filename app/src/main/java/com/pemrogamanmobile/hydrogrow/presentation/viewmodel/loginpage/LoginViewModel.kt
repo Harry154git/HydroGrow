@@ -4,59 +4,58 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.AuthCredential
+import com.pemrogamanmobile.hydrogrow.domain.model.User
 import com.pemrogamanmobile.hydrogrow.domain.usecase.auth.SignInWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+// Sealed Interface untuk merepresentasikan UI State
+sealed interface LoginState {
+    object Idle : LoginState
+    object Loading : LoginState
+    data class Success(val user: User) : LoginState
+    data class Error(val message: String?) : LoginState
+}
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val signInWithGoogleUseCase: SignInWithGoogleUseCase
 ) : ViewModel() {
 
-    var email by mutableStateOf("")
-    var password by mutableStateOf("")
-    var isLoading by mutableStateOf(false)
-    var errorMessage by mutableStateOf<String?>(null)
-    var successLogin by mutableStateOf(false)
+    // State yang akan diobservasi oleh UI
+    var uiState: LoginState by mutableStateOf(LoginState.Idle)
+        private set
 
-    fun onEmailChange(newEmail: String) {
-        email = newEmail
-    }
-
-    fun onPasswordChange(newPassword: String) {
-        password = newPassword
-    }
-
-    fun validate(): Boolean {
-        if (!email.contains("@") || !email.endsWith(".com")) {
-            errorMessage = "Email harus valid dan mengandung @ serta diakhiri dengan .com"
-            return false
+    /**
+     * Fungsi untuk memulai proses sign-in dengan kredensial dari Google.
+     */
+    fun signInWithGoogle(credential: AuthCredential) {
+        viewModelScope.launch {
+            uiState = LoginState.Loading // Set state menjadi Loading
+            signInWithGoogleUseCase(credential)
+                .onSuccess { user ->
+                    // Jika berhasil, update state menjadi Success dengan data user
+                    // Pengecekan user tidak null untuk keamanan
+                    if (user != null) {
+                        uiState = LoginState.Success(user)
+                    } else {
+                        uiState = LoginState.Error("Gagal mendapatkan data user.")
+                    }
+                }
+                .onFailure { exception ->
+                    // Jika gagal, update state menjadi Error dengan pesan kesalahan
+                    uiState = LoginState.Error(exception.message)
+                }
         }
-        if (password.length < 4) {
-            errorMessage = "Password minimal 4 karakter"
-            return false
-        }
-        return true
     }
 
-//    fun login() {
-//        if (!validate()) return
-//
-//        viewModelScope.launch {
-//            isLoading = true
-//            errorMessage = null
-//            try {
-//                val user = signInWithGoogleUseCase.SignInWithGoogleUseCase(email, password)
-//                if (user != null) {
-//                    successLogin = true
-//                } else {
-//                    errorMessage = "Login gagal, coba periksa kembali email dan password"
-//                }
-//            } catch (e: Exception) {
-//                errorMessage = e.message ?: "Terjadi kesalahan tidak diketahui"
-//            } finally {
-//                isLoading = false
-//            }
-//        }
-//    }
+    /**
+     * Fungsi untuk mereset state kembali ke Idle setelah navigasi atau menampilkan error.
+     */
+    fun resetState() {
+        uiState = LoginState.Idle
+    }
 }
