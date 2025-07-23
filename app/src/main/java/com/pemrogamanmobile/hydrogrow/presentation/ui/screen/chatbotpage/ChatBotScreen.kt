@@ -1,6 +1,8 @@
 package com.pemrogamanmobile.hydrogrow.presentation.ui.screen.chatbotpage
 
+import android.Manifest // BARU
 import android.content.Context
+import android.content.pm.PackageManager // BARU
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat // BARU
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -84,6 +87,7 @@ fun ChatBotScreen(
     var showContextTypeSelectionDialog by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
+
     // Launcher untuk mengambil gambar dari galeri
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -119,6 +123,27 @@ fun ChatBotScreen(
     val backgroundColor = Color(0xFFE9FDD9)
     val sendButtonColor = Color(0xFF59A869)
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // BARU: Launcher untuk meminta izin kamera
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Izin diberikan, sekarang luncurkan kamera
+            val file = context.createImageFile()
+            val uri = FileProvider.getUriForFile(
+                Objects.requireNonNull(context),
+                context.packageName + ".provider", file
+            )
+            imageUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            // Izin ditolak, beri tahu pengguna
+            scope.launch {
+                snackbarHostState.showSnackbar("Izin kamera diperlukan untuk mengambil foto.")
+            }
+        }
+    }
 
     LaunchedEffect(error) {
         error?.let {
@@ -167,13 +192,26 @@ fun ChatBotScreen(
                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                     if (!sheetState.isVisible) {
                         showAttachmentSheet = false
-                        val file = context.createImageFile()
-                        val uri = FileProvider.getUriForFile(
-                            Objects.requireNonNull(context),
-                            context.packageName + ".provider", file
-                        )
-                        imageUri = uri
-                        cameraLauncher.launch(uri)
+                        // MODIFIKASI: Cek izin sebelum meluncurkan kamera
+                        when (PackageManager.PERMISSION_GRANTED) {
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.CAMERA
+                            ) -> {
+                                // Izin sudah ada, langsung luncurkan kamera
+                                val file = context.createImageFile()
+                                val uri = FileProvider.getUriForFile(
+                                    Objects.requireNonNull(context),
+                                    context.packageName + ".provider", file
+                                )
+                                imageUri = uri
+                                cameraLauncher.launch(uri)
+                            }
+                            else -> {
+                                // Minta izin kepada pengguna
+                                permissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        }
                     }
                 }
             },
