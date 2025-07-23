@@ -1,4 +1,4 @@
-package com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage
+package com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage.makegarden.withai
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,7 +12,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.hydroponicpage.MakeGardenViewModel
+import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.hydroponicpage.makegarden.withai.MakeGardenViewModel
 
 @Composable
 fun MakeGardenOutput(

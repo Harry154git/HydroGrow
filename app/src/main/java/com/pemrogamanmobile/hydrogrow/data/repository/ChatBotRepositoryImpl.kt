@@ -110,21 +110,30 @@ class ChatBotRepositoryImpl @Inject constructor(
         }
     }
 
-    // Tidak ada perubahan signifikan di sini, sudah cukup baik.
     override suspend fun addMessageToChat(chatId: String, message: ChatMessage, imageUri: Uri?): Resource<Unit> {
-        try {
+        return try {
             val chatEntity = dao.getChatById(chatId) ?: return Resource.Error("Percakapan tidak ditemukan")
             val chat = chatEntity.toDomain()
 
-            if (imageUri != null) {
+            // FIX: Logika diubah untuk membuat satu ChatMessage yang utuh
+            val finalMessage = if (imageUri != null) {
+                // 1. Upload gambar dan dapatkan URL-nya
                 val imageUrl = imageUploader.uploadImageToStorage(imageUri, "chatbot")
-                val imageMessage = ChatMessage(role = ChatMessage.ROLE_IMAGE, content = imageUrl)
-                chat.conversation.add(imageMessage)
+                // 2. Salin pesan asli dan tambahkan imageUrl
+                message.copy(imageUrl = imageUrl)
+            } else {
+                // 3. Jika tidak ada gambar, gunakan pesan asli
+                message
             }
-            chat.conversation.add(message)
-            return updateChat(chat)
+
+            // 4. Tambahkan satu pesan final ke percakapan
+            chat.conversation.add(finalMessage)
+
+            // 5. Perbarui chat
+            updateChat(chat)
+
         } catch (e: Exception) {
-            return Resource.Error("Gagal mengirim pesan: ${e.message}")
+            Resource.Error("Gagal mengirim pesan: ${e.message}")
         }
     }
 

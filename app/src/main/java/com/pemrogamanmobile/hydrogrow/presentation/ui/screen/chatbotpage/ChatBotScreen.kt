@@ -88,25 +88,19 @@ fun ChatBotScreen(
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-
     // Launcher untuk mengambil gambar dari galeri
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let {
-            viewModel.addVisualMessage(it)
-            imageUri = it
-        }
+        uri?.let { imageUri = it }
     }
 
     // Launcher untuk mengambil foto dari kamera
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success: Boolean ->
-        if (success) {
-            imageUri?.let {
-                viewModel.addVisualMessage(it)
-            }
+        if (!success) {
+            imageUri = null
         }
     }
 
@@ -115,7 +109,6 @@ fun ChatBotScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            // Izin diberikan, sekarang luncurkan kamera
             val file = context.createImageFile()
             val uri = FileProvider.getUriForFile(
                 Objects.requireNonNull(context),
@@ -124,27 +117,32 @@ fun ChatBotScreen(
             imageUri = uri
             cameraLauncher.launch(uri)
         } else {
-            // Izin ditolak, beri tahu pengguna
             scope.launch {
                 snackbarHostState.showSnackbar("Izin kamera diperlukan untuk mengambil foto.")
             }
         }
     }
 
-    // Muat percakapan jika chatbotId dari argumen navigasi diberikan
+    // Muat percakapan atau mulai yang baru
     LaunchedEffect(chatbotId) {
         if (chatbotId != null) {
             viewModel.loadChat(chatbotId)
         } else {
-            if (messages.isEmpty()) {
-                viewModel.startNewChat()
+            viewModel.startNewChat()
+        }
+    }
+
+    // Sinkronisasi navigasi setelah chat baru dibuat
+    LaunchedEffect(activeChatId) {
+        if (chatbotId == null && activeChatId != null) {
+            navController.navigate("chatbot_screen?chatbotId=$activeChatId") {
+                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                launchSingleTop = true
             }
         }
     }
 
-    val backgroundColor = Color(0xFFE9FDD9)
-    val sendButtonColor = Color(0xFF59A869)
-
+    // Tampilkan error jika ada
     LaunchedEffect(error) {
         error?.let {
             snackbarHostState.showSnackbar(message = it, duration = SnackbarDuration.Long)
@@ -152,26 +150,24 @@ fun ChatBotScreen(
         }
     }
 
-    // Dialog untuk memilih tipe konteks (Garden atau Plant)
+    val backgroundColor = Color(0xFFE9FDD9)
+    val sendButtonColor = Color(0xFF59A869)
+
+    // Tampilkan dialog pemilihan tipe konteks (Garden/Plant)
     if (showContextTypeSelectionDialog) {
         ContextTypeSelectionDialog(
             onDismiss = { showContextTypeSelectionDialog = false },
             onSelection = { type ->
                 showContextTypeSelectionDialog = false
-                showContextDialog = type // Menampilkan dialog daftar item
+                showContextDialog = type
             }
         )
     }
 
-    // Dialog untuk memilih item spesifik (Garden atau Plant)
+    // Tampilkan dialog pemilihan item konteks
     if (showContextDialog != null) {
         val type = showContextDialog!!
-        val (items, title) = if (type == "garden") {
-            gardens to "Pilih Kebun"
-        } else {
-            plants to "Pilih Tanaman"
-        }
-
+        val (items, title) = if (type == "garden") gardens to "Pilih Kebun" else plants to "Pilih Tanaman"
         ItemListDialog(
             title = title,
             items = items,
@@ -183,7 +179,7 @@ fun ChatBotScreen(
         )
     }
 
-    // Bottom Sheet untuk Opsi Lampiran
+    // Tampilkan bottom sheet untuk lampiran
     if (showAttachmentSheet) {
         AttachmentBottomSheet(
             onDismiss = { showAttachmentSheet = false },
@@ -192,22 +188,13 @@ fun ChatBotScreen(
                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                     if (!sheetState.isVisible) {
                         showAttachmentSheet = false
-                        when (PackageManager.PERMISSION_GRANTED) {
-                            ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.CAMERA
-                            ) -> {
-                                val file = context.createImageFile()
-                                val uri = FileProvider.getUriForFile(
-                                    Objects.requireNonNull(context),
-                                    context.packageName + ".provider", file
-                                )
-                                imageUri = uri
-                                cameraLauncher.launch(uri)
-                            }
-                            else -> {
-                                permissionLauncher.launch(Manifest.permission.CAMERA)
-                            }
+                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            val file = context.createImageFile()
+                            val uri = FileProvider.getUriForFile(context, context.packageName + ".provider", file)
+                            imageUri = uri
+                            cameraLauncher.launch(uri)
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.CAMERA)
                         }
                     }
                 }
@@ -239,14 +226,16 @@ fun ChatBotScreen(
                 currentChatId = activeChatId,
                 onHistoryClick = { historyId ->
                     scope.launch { drawerState.close() }
-                    navController.navigate("chatbot_screen?chatbotId=$historyId") {
-                        launchSingleTop = true
+                    if (historyId != activeChatId) {
+                        navController.navigate("chatbot_screen?chatbotId=$historyId") {
+                            launchSingleTop = true
+                        }
                     }
                 },
                 onNewChatClick = {
                     scope.launch { drawerState.close() }
-                    viewModel.startNewChat()
                     navController.navigate("chatbot_screen") {
+                        popUpTo(navController.graph.startDestinationId)
                         launchSingleTop = true
                     }
                 }
@@ -263,39 +252,44 @@ fun ChatBotScreen(
                             Icon(Icons.Default.Menu, contentDescription = "Buka Menu")
                         }
                     },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.White
-                    )
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
                 )
             },
             bottomBar = {
-                Column {
+                Column(modifier = Modifier.background(backgroundColor)) {
                     selectedContext?.let { (_, name, _) ->
                         ContextChip(
                             contextName = name,
                             onClear = { viewModel.clearContext() }
                         )
                     }
+                    imageUri?.let { uri ->
+                        ImagePreview(
+                            imageUri = uri,
+                            onClearImage = { imageUri = null }
+                        )
+                    }
                     UserInputArea(
                         value = userInput,
                         onValueChange = { userInput = it },
                         onSend = {
-                            if (userInput.isNotBlank() || imageUri != null) {
-                                imageUri?.let { uri ->
-                                    val imageFile = uri.toFile(context)
-                                    val question = userInput.ifBlank { "Tolong identifikasi tanaman pada gambar ini." }
-                                    viewModel.sendMessageWithImage(question, imageFile)
-                                    imageUri = null
-                                } ?: run {
-                                    viewModel.sendMessage(userInput)
-                                }
-                                userInput = ""
-                            }
+                            // ✅ FIX: Lakukan konversi Uri ke File di sini
+                            val currentInput = userInput
+                            val currentImageUri = imageUri
+
+                            // Konversi Uri ke File HANYA jika tidak null
+                            val imageFile: File? = currentImageUri?.toFile(context)
+
+                            // Reset UI state untuk responsivitas
+                            userInput = ""
+                            imageUri = null
+
+                            // Panggil fungsi ViewModel dengan parameter yang sudah benar (File, bukan Uri)
+                            viewModel.sendMessage(currentInput, imageFile)
                         },
-                        onAttachmentClick = {
-                            showAttachmentSheet = true
-                        },
-                        buttonColor = sendButtonColor
+                        onAttachmentClick = { showAttachmentSheet = true },
+                        buttonColor = sendButtonColor,
+                        isSendEnabled = userInput.isNotBlank() || imageUri != null
                     )
                 }
             }
@@ -310,7 +304,7 @@ fun ChatBotScreen(
                 if (messages.isEmpty() && !isTyping) {
                     InitialChatView(
                         onSuggestionClick = { suggestion ->
-                            viewModel.sendMessage(suggestion)
+                            userInput = suggestion
                         }
                     )
                 } else {
@@ -325,8 +319,7 @@ fun ChatBotScreen(
                         state = listState,
                         contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        // MODIFIKASI: Kunci unik untuk item list, mengatasi crash.
-                        items(messages, key = { "${it.timestamp}-${it.content}" }) { message ->
+                        items(messages, key = { "${it.timestamp}-${it.content}-${it.imageUrl}" }) { message ->
                             ChatBubble(message)
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -356,9 +349,7 @@ private fun ChatHistoryDrawer(
     onHistoryClick: (String) -> Unit,
     onNewChatClick: () -> Unit
 ) {
-    ModalDrawerSheet(
-        modifier = Modifier.fillMaxWidth(0.8f)
-    ) {
+    ModalDrawerSheet(modifier = Modifier.fillMaxWidth(0.8f)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier
@@ -367,37 +358,17 @@ private fun ChatHistoryDrawer(
                     .padding(vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Edit,
-                    contentDescription = "Percakapan Baru",
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = "mulai percakapan baru",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Icon(Icons.Outlined.Edit, "Percakapan Baru", Modifier.size(24.dp))
+                Spacer(Modifier.width(16.dp))
+                Text("Mulai percakapan baru", fontSize = 16.sp, fontWeight = FontWeight.Medium)
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
             Divider()
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "History",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
+            Spacer(Modifier.height(16.dp))
+            Text("History", fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(bottom = 8.dp))
             LazyColumn {
                 items(histories, key = { it.id }) { history ->
-                    HistoryItem(
-                        title = history.title,
-                        isSelected = history.id == currentChatId,
-                        onClick = { onHistoryClick(history.id) }
-                    )
+                    HistoryItem(history.title, history.id == currentChatId) { onHistoryClick(history.id) }
                 }
             }
         }
@@ -405,14 +376,9 @@ private fun ChatHistoryDrawer(
 }
 
 @Composable
-private fun HistoryItem(
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
+private fun HistoryItem(title: String, isSelected: Boolean, onClick: () -> Unit) {
     val backgroundColor = if (isSelected) Color(0xFFD7F5D7) else Color.Transparent
     val textColor = if (isSelected) Color.Black else Color.DarkGray
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -421,14 +387,9 @@ private fun HistoryItem(
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
-        Text(
-            text = title,
-            color = textColor,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            fontSize = 14.sp
-        )
+        Text(title, color = textColor, fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal, fontSize = 14.sp, maxLines = 1)
     }
-    Spacer(modifier = Modifier.height(4.dp))
+    Spacer(Modifier.height(4.dp))
 }
 
 @Composable
@@ -438,32 +399,17 @@ private fun InitialChatView(onSuggestionClick: (String) -> Unit) {
         "Buatkan jadwal tanam dan perawatan otomatis untuk selada!",
         "Rekomendasi sayuran daun untuk pemula?"
     )
-
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 32.dp),
+        modifier = Modifier.fillMaxSize().padding(top = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "👋 Halo!",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-        Text(
-            text = "Tanyakan apa saja tentang hidroponik",
-            fontSize = 18.sp,
-            color = Color.Gray
-        )
-        Spacer(modifier = Modifier.height(48.dp))
+        Text("👋 Halo!", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+        Text("Tanyakan apa saja tentang hidroponik", fontSize = 18.sp, color = Color.Gray)
+        Spacer(Modifier.height(48.dp))
         suggestions.forEach { suggestion ->
-            SuggestionCard(
-                text = suggestion,
-                onClick = { onSuggestionClick(suggestion) }
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+            SuggestionCard(suggestion) { onSuggestionClick(suggestion) }
+            Spacer(Modifier.height(12.dp))
         }
     }
 }
@@ -471,53 +417,40 @@ private fun InitialChatView(onSuggestionClick: (String) -> Unit) {
 @Composable
 private fun SuggestionCard(text: String, onClick: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(16.dp),
-            textAlign = TextAlign.Center,
-            color = Color.DarkGray
-        )
+        Text(text, modifier = Modifier.padding(16.dp), textAlign = TextAlign.Center, color = Color.DarkGray)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserInputArea(
     value: String,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
     onAttachmentClick: () -> Unit,
-    buttonColor: Color
+    buttonColor: Color,
+    isSendEnabled: Boolean
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onAttachmentClick) {
-                Icon(Icons.Default.Add, contentDescription = "Tambah Lampiran", tint = Color.Gray)
-            }
+            IconButton(onClick = onAttachmentClick) { Icon(Icons.Default.Add, "Tambah Lampiran", tint = Color.Gray) }
             TextField(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("bertanya apa saja...") },
+                placeholder = { Text("Bertanya apa saja...") },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
@@ -525,19 +458,12 @@ private fun UserInputArea(
                     unfocusedIndicatorColor = Color.Transparent,
                 )
             )
-            IconButton(onClick = onSend, enabled = value.isNotBlank() ) { // Memungkinkan kirim jika hanya ada gambar
+            IconButton(onClick = onSend, enabled = isSendEnabled) {
                 Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(buttonColor),
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(if (isSendEnabled) buttonColor else Color.Gray),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        Icons.Default.ArrowUpward,
-                        contentDescription = "Kirim",
-                        tint = Color.White
-                    )
+                    Icon(Icons.Default.ArrowUpward, "Kirim", tint = Color.White)
                 }
             }
         }
@@ -546,33 +472,29 @@ private fun UserInputArea(
 
 @Composable
 private fun ChatBubble(message: ChatMessage) {
-    val isUserMessage = message.role == ChatMessage.ROLE_USER || message.role == ChatMessage.ROLE_IMAGE
+    val isUserMessage = message.role == "user"
     val bubbleColor = if (isUserMessage) Color(0xFFDCF8C6) else Color.White
     val alignment = if (isUserMessage) Alignment.End else Alignment.Start
-
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentWidth(alignment)
+        modifier = Modifier.fillMaxWidth().wrapContentWidth(alignment)
     ) {
-        Column(horizontalAlignment = alignment) {
-            if (message.role == ChatMessage.ROLE_IMAGE) {
-                AsyncImage(
-                    model = message.content,
-                    contentDescription = "Gambar dari Pengguna",
-                    modifier = Modifier
-                        .sizeIn(maxWidth = 250.dp, maxHeight = 250.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            if (message.content.isNotEmpty() && message.role != ChatMessage.ROLE_IMAGE) {
-                Box(
-                    modifier = Modifier
-                        .background(bubbleColor, shape = RoundedCornerShape(12.dp))
-                        .padding(12.dp)
-                        .widthIn(max = 300.dp),
-                ) {
+        Box(
+            modifier = Modifier.background(bubbleColor, RoundedCornerShape(12.dp)).widthIn(max = 300.dp),
+        ) {
+            Column(modifier = Modifier.padding(if (message.imageUrl != null) 8.dp else 12.dp)) {
+                message.imageUrl?.let {
+                    AsyncImage(
+                        model = it,
+                        contentDescription = "Gambar dari Pengguna",
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp).clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                if (message.content.isNotEmpty() && message.content != "...") {
+                    Spacer(Modifier.height(if (message.imageUrl != null) 8.dp else 0.dp))
+                    Text(message.content)
+                }
+                if (message.content == "...") {
                     Text(message.content)
                 }
             }
@@ -580,10 +502,23 @@ private fun ChatBubble(message: ChatMessage) {
     }
 }
 
-
-//================================//
-//    NEW COMPOSABLES & DIALOGS   //
-//================================//
+@Composable
+private fun ImagePreview(imageUri: Uri, onClearImage: () -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp)) {
+        AsyncImage(
+            model = imageUri,
+            contentDescription = "Image Preview",
+            modifier = Modifier.size(100.dp).clip(RoundedCornerShape(12.dp)),
+            contentScale = ContentScale.Crop
+        )
+        IconButton(
+            onClick = onClearImage,
+            modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).background(Color.Black.copy(alpha = 0.5f), CircleShape)
+        ) {
+            Icon(Icons.Default.Close, "Hapus Gambar", tint = Color.White, modifier = Modifier.size(18.dp))
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -594,20 +529,13 @@ private fun AttachmentBottomSheet(
     onGalleryClick: () -> Unit,
     onAskWithContextClick: () -> Unit
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-    ) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Tambahkan ke Pesan",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(start = 8.dp, bottom = 16.dp)
-            )
-            AttachmentOption(icon = Icons.Default.CameraAlt, text = "Ambil Foto", onClick = onCameraClick)
-            AttachmentOption(icon = Icons.Default.Collections, text = "Pilih dari Galeri", onClick = onGalleryClick)
-            AttachmentOption(icon = Icons.Default.QuestionAnswer, text = "Tanya dengan Konteks", onClick = onAskWithContextClick)
-            Spacer(modifier = Modifier.height(16.dp))
+            Text("Tambahkan ke Pesan", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 8.dp, bottom = 16.dp))
+            AttachmentOption(Icons.Default.CameraAlt, "Ambil Foto", onCameraClick)
+            AttachmentOption(Icons.Default.Collections, "Pilih dari Galeri", onGalleryClick)
+            AttachmentOption(Icons.Default.QuestionAnswer, "Tanya dengan Konteks", onAskWithContextClick)
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -615,14 +543,11 @@ private fun AttachmentBottomSheet(
 @Composable
 private fun AttachmentOption(icon: ImageVector, text: String, onClick: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = text, modifier = Modifier.size(28.dp))
-        Spacer(modifier = Modifier.width(16.dp))
+        Icon(icon, text, Modifier.size(28.dp))
+        Spacer(Modifier.width(16.dp))
         Text(text, fontSize = 16.sp)
     }
 }
@@ -634,35 +559,16 @@ fun ContextTypeSelectionDialog(onDismiss: () -> Unit, onSelection: (String) -> U
         title = { Text("Pilih Konteks Pertanyaan") },
         text = {
             Column {
-                Text(
-                    text = "Berdasarkan Kebun",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSelection("garden") }
-                        .padding(vertical = 12.dp)
-                )
-                Text(
-                    text = "Berdasarkan Tanaman",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSelection("plant") }
-                        .padding(vertical = 12.dp)
-                )
+                Text("Berdasarkan Kebun", Modifier.fillMaxWidth().clickable { onSelection("garden") }.padding(vertical = 12.dp))
+                Text("Berdasarkan Tanaman", Modifier.fillMaxWidth().clickable { onSelection("plant") }.padding(vertical = 12.dp))
             }
         },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Batal") }
-        }
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
     )
 }
 
 @Composable
-fun <T> ItemListDialog(
-    title: String,
-    items: List<T>,
-    onDismiss: () -> Unit,
-    onItemSelected: (id: String, name: String) -> Unit
-) {
+fun <T> ItemListDialog(title: String, items: List<T>, onDismiss: () -> Unit, onItemSelected: (id: String, name: String) -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(text = title) },
@@ -671,7 +577,6 @@ fun <T> ItemListDialog(
                 Text("Tidak ada data tersedia.")
             } else {
                 LazyColumn {
-                    // MODIFIKASI: Kunci unik untuk item list (praktik terbaik).
                     items(items, key = { item ->
                         when (item) {
                             is Garden -> item.id
@@ -684,45 +589,23 @@ fun <T> ItemListDialog(
                             is Plant -> item.id to item.plantName
                             else -> "" to "Item tidak dikenal"
                         }
-                        Text(
-                            text = name,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onItemSelected(id, name) }
-                                .padding(vertical = 12.dp)
-                        )
+                        Text(name, Modifier.fillMaxWidth().clickable { onItemSelected(id, name) }.padding(vertical = 12.dp))
                     }
                 }
             }
         },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Batal")
-            }
-        }
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
     )
 }
 
 @Composable
-fun ContextChip(
-    contextName: String,
-    onClear: () -> Unit
-) {
-    Row(
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+fun ContextChip(contextName: String, onClear: () -> Unit) {
+    Row(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         AssistChip(
-            onClick = { /* No action */ },
+            onClick = {},
             label = { Text("Konteks: $contextName") },
             trailingIcon = {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Hapus Konteks",
-                    modifier = Modifier
-                        .size(18.dp)
-                        .clickable(onClick = onClear)
-                )
+                Icon(Icons.Default.Close, "Hapus Konteks", Modifier.size(18.dp).clickable(onClick = onClear))
             }
         )
     }
@@ -737,6 +620,8 @@ fun Context.createImageFile(): File {
     val imageFileName = "JPEG_" + timeStamp + "_"
     return File.createTempFile(imageFileName, ".jpg", externalCacheDir)
 }
+
+// Letakkan kode ini di bagian paling bawah file ChatBotScreen.kt
 
 fun Uri.toFile(context: Context): File {
     val contentResolver = context.contentResolver

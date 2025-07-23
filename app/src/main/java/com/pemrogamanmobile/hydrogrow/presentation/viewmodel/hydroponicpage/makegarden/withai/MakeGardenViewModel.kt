@@ -1,16 +1,13 @@
-package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.hydroponicpage
+package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.hydroponicpage.makegarden.withai
 
 import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.*
-import androidx.lifecycle.viewModelScope
-import com.pemrogamanmobile.hydrogrow.domain.model.Garden
 import com.pemrogamanmobile.hydrogrow.domain.usecase.ai.creategarden.CreateGardenUseCase
 import com.pemrogamanmobile.hydrogrow.domain.usecase.auth.GetCurrentUserUseCase
 import com.pemrogamanmobile.hydrogrow.domain.usecase.garden.GardenUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel

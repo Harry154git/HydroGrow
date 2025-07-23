@@ -23,6 +23,8 @@ import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.chatbotpage.ChatBot
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.bottomnavigationbar.BottomNavigationBar
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.home.HomeScreen
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage.*
+import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage.makegarden.withai.MakeGardenInput
+import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage.makegarden.withai.MakeGardenOutput
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.loginpage.LoginScreen
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.onboardingpage.OnBoardingScreen
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.plantpage.AddPlantScreen
