@@ -14,6 +14,8 @@ import com.pemrogamanmobile.hydrogrow.R
 import coil.compose.AsyncImage
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun ProfileCard(
@@ -26,38 +28,44 @@ fun ProfileCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onProfileClick() }
-            .padding(8.dp)
+        // Menghapus padding agar menempel di tepi sesuai layout HomeScreen
     ) {
+        // Kolom untuk teks sambutan dan nama pengguna
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f) // Memberi sisa ruang untuk gambar
         ) {
             Text(
-                text = "Selamat datang,",
-                style = MaterialTheme.typography.bodyMedium
+                text = "Selamat Datang,",
+                style = MaterialTheme.typography.bodyLarge // Teks sedikit lebih besar
             )
             Text(
-                text = name,
-                style = MaterialTheme.typography.titleMedium
+                // Menambahkan "!" agar sesuai desain
+                text = "$name!",
+                // Style dibuat lebih besar dan tebal sesuai desain
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
             )
         }
 
         Spacer(modifier = Modifier.width(16.dp))
 
+        // Gambar profil dari URL atau default jika tidak ada
+        val imageModifier = Modifier
+            .size(60.dp) // Ukuran gambar disesuaikan agar pas
+            .clip(CircleShape)
+
         if (!photoUrl.isNullOrEmpty()) {
             AsyncImage(
                 model = photoUrl,
                 contentDescription = "Foto Profil",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
+                contentScale = ContentScale.Crop, // Memastikan gambar mengisi lingkaran
+                modifier = imageModifier
             )
         } else {
             Image(
-                painter = painterResource(id = R.drawable.user),
+                painter = painterResource(id = R.drawable.ic_profile_info), // Pastikan drawable ini ada
                 contentDescription = "Foto Profil Default",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
+                modifier = imageModifier
             )
         }
     }

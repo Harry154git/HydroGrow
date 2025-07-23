@@ -62,7 +62,6 @@ fun EditGardenScreen(
         return
     }
 
-    // ✅ Local value yang survive rotasi
     var localName by rememberSaveable { mutableStateOf("") }
     var localSize by rememberSaveable { mutableStateOf("") }
     var localType by rememberSaveable { mutableStateOf("") }
@@ -70,10 +69,11 @@ fun EditGardenScreen(
     var isInitialized by rememberSaveable { mutableStateOf(false) }
 
     // ✅ Inisialisasi hanya sekali
-    LaunchedEffect(Unit) {
+    LaunchedEffect(kebun) { // Dijalankan ulang jika objek 'kebun' berubah
         if (!isInitialized) {
-            localName = kebun.name
-            localSize = kebun.size.toString()
+            // ✅ Gunakan properti dari model domain
+            localName = kebun.gardenName
+            localSize = kebun.gardenSize.toString()
             localType = kebun.hydroponicType
             isInitialized = true
         }
@@ -102,15 +102,16 @@ fun EditGardenScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // ✅ Gunakan properti dari model domain
         InfoRow(
             "Nama Kebun:",
-            if (isEditing) localName else kebun.name,
+            if (isEditing) localName else kebun.gardenName,
             isEditing
         ) { localName = it }
 
         InfoRow(
             "Luas Kebun (m²):",
-            if (isEditing) localSize else kebun.size.toString(),
+            if (isEditing) localSize else kebun.gardenSize.toString(),
             isEditing
         ) { localSize = it }
 
@@ -129,8 +130,9 @@ fun EditGardenScreen(
             Button(
                 onClick = {
                     if (!isEditing) {
-                        localName = kebun.name
-                        localSize = kebun.size.toString()
+                        // ✅ Gunakan properti dari model domain
+                        localName = kebun.gardenName
+                        localSize = kebun.gardenSize.toString()
                         localType = kebun.hydroponicType
                     }
                     isEditing = !isEditing
@@ -143,11 +145,13 @@ fun EditGardenScreen(
             if (isEditing) {
                 Button(
                     onClick = {
+                        // ✅ Gunakan properti dari model domain saat meng-copy
                         val updatedGarden = kebun.copy(
-                            name = localName,
-                            size = localSize.toDoubleOrNull() ?: kebun.size,
+                            gardenName = localName,
+                            gardenSize = localSize.toDoubleOrNull() ?: kebun.gardenSize,
                             hydroponicType = localType
                         )
+                        // ✅ Kirim objek domain 'updatedGarden' langsung
                         viewModel.updateGarden(updatedGarden)
                         isEditing = false
                         navController.popBackStack()
@@ -163,6 +167,7 @@ fun EditGardenScreen(
 
         Button(
             onClick = {
+                // ✅ Kirim objek domain 'kebun' langsung
                 viewModel.deleteGarden(kebun)
                 navController.popBackStack()
             },

@@ -1,8 +1,6 @@
 package com.pemrogamanmobile.hydrogrow.presentation.ui.screen.plantpage
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -14,12 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.pemrogamanmobile.hydrogrow.presentation.ui.uistate.PlantUiState
+import com.pemrogamanmobile.hydrogrow.presentation.uistate.PlantUiState
 import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.plantpage.PlantViewModel
 
 @Composable
@@ -29,7 +26,6 @@ fun PlantScreen(
     viewModel: PlantViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
 
     LaunchedEffect(plantId) {
         viewModel.loadPlantById(plantId)
@@ -64,8 +60,9 @@ fun PlantScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Nama: ${plant.name}", style = MaterialTheme.typography.headlineSmall)
-                    Button(onClick = { navController.navigate("home") }) {
+                    // ✅ Gunakan properti 'plantName' dari model domain
+                    Text("Nama: ${plant.plantName}", style = MaterialTheme.typography.headlineSmall)
+                    Button(onClick = { navController.popBackStack() }) {
                         Text("Kembali")
                     }
                 }
@@ -98,7 +95,7 @@ fun PlantScreen(
                 Button(onClick = {
                     navController.navigate("chatbot")
                 }) {
-                    Text("Bertanya tentang tanaman ini?")
+                    Text("Tanya tentang tanaman ini?")
                 }
             }
         }

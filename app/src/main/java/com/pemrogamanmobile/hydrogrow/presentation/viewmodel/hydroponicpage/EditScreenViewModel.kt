@@ -2,11 +2,9 @@ package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.hydroponicpage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pemrogamanmobile.hydrogrow.domain.model.Garden // Import model domain
 import com.pemrogamanmobile.hydrogrow.domain.usecase.garden.GardenUseCase
-import com.pemrogamanmobile.hydrogrow.presentation.model.GardenUi
-import com.pemrogamanmobile.hydrogrow.presentation.ui.uistate.GardenUiState
-import com.pemrogamanmobile.hydrogrow.presentation.mapper.toDomain
-import com.pemrogamanmobile.hydrogrow.presentation.mapper.toUi
+import com.pemrogamanmobile.hydrogrow.presentation.uistate.GardenUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +26,8 @@ class EditGardenViewModel @Inject constructor(
             try {
                 val garden = gardenUseCase.getGardenById(gardenId)
                 _uiState.value = _uiState.value.copy(
-                    garden = garden?.toUi(),
+                    // Hapus .toUi(), langsung gunakan objek domain
+                    garden = garden,
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -37,12 +36,14 @@ class EditGardenViewModel @Inject constructor(
         }
     }
 
-    fun updateGarden(gardenUi: GardenUi) {
+    // Ubah parameter dari GardenUi menjadi Garden
+    fun updateGarden(garden: Garden) {
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         viewModelScope.launch {
             try {
-                gardenUseCase.updateGarden(gardenUi.toDomain())
+                // Hapus .toDomain(), langsung oper objek domain
+                gardenUseCase.updateGarden(garden)
                 _uiState.value = _uiState.value.copy(isLoading = false)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
@@ -50,12 +51,14 @@ class EditGardenViewModel @Inject constructor(
         }
     }
 
-    fun deleteGarden(gardenUi: GardenUi) {
+    // Ubah parameter dari GardenUi menjadi Garden
+    fun deleteGarden(garden: Garden) {
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         viewModelScope.launch {
             try {
-                gardenUseCase.deleteGarden(gardenUi.toDomain())
+                // Hapus .toDomain(), langsung oper objek domain
+                gardenUseCase.deleteGarden(garden)
                 _uiState.value = _uiState.value.copy(garden = null, isLoading = false)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)

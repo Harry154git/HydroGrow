@@ -8,6 +8,9 @@ interface AuthRepository {
     // Fungsi untuk mendapatkan user yang sedang login
     fun getSignedInUser(): User?
 
+    // BARU: Kontrak untuk mendapatkan status login sebagai Flow
+    fun getAuthStateFlow(): Flow<User?>
+
     val cachedUser: Flow<User?>
 
     // Fungsi untuk logout

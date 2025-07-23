@@ -9,6 +9,7 @@ import com.pemrogamanmobile.hydrogrow.domain.model.User
 import com.pemrogamanmobile.hydrogrow.domain.repository.AuthRepository
 import com.pemrogamanmobile.hydrogrow.domain.repository.PreferencesRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -21,6 +22,14 @@ class AuthRepositoryImpl @Inject constructor(
     override fun getSignedInUser(): User? {
         // Memakai fungsi mapper terpusat
         return authService.getCurrentUser()?.toDomain()
+    }
+
+    // BARU: Implementasi untuk mendapatkan status login sebagai Flow
+    override fun getAuthStateFlow(): Flow<User?> {
+        return authService.getAuthStateFlow().map { firebaseUser ->
+            // Ubah FirebaseUser? menjadi User? (domain model)
+            firebaseUser?.toDomain()
+        }
     }
 
     // Alirkan data user dari cache (DataStore) untuk UI

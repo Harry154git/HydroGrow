@@ -1,6 +1,5 @@
 package com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,10 +19,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,7 +29,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.hydroponicpage.GardenViewModel
 import com.pemrogamanmobile.hydrogrow.presentation.ui.components.PlantCard
-import coil.compose.AsyncImage
 
 @Composable
 fun GardenScreen(
@@ -40,7 +37,6 @@ fun GardenScreen(
     navController: NavController
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
 
     LaunchedEffect(gardenId) {
         viewModel.loadGardenById(gardenId)
@@ -70,9 +66,10 @@ fun GardenScreen(
                     .verticalScroll(scrollState)
                     .padding(16.dp)
             ) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = garden.name,
+                        // ✅ Gunakan 'gardenName' dari model domain
+                        text = garden.gardenName,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -95,25 +92,27 @@ fun GardenScreen(
                 Button(onClick = {
                     navController.navigate("chatbot")
                 }) {
-                    Text("Bertanya tentang hidroponik ini?")
+                    Text("Tanya tentang hidroponik ini?")
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Tanaman yang ada di kebun ini",
+                    text = "Tanaman di Kebun Ini",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                LazyRow {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     items(uiState.plants) { plant ->
                         PlantCard(
                             imageUrl = plant.imageUrl,
-                            name = plant.name,
-                            status = plant.harvestStatus,
+                            // ✅ Gunakan 'plantName' dari model domain
+                            name = plant.plantName,
+                            // ✅ Ganti 'harvestStatus' dengan 'harvestTime'
+                            status = plant.harvestTime,
                             onClick = { navController.navigate("plant_screen/${plant.id}") }
                         )
                     }
@@ -124,7 +123,7 @@ fun GardenScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Garden tidak ditemukan.")
+                Text("Kebun tidak ditemukan.")
             }
         }
     }
