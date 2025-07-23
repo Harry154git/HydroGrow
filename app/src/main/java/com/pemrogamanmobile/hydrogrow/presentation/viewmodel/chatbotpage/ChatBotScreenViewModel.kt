@@ -1,22 +1,30 @@
 package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.chatbotpage
 
+import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pemrogamanmobile.hydrogrow.domain.model.ChatBot
 import com.pemrogamanmobile.hydrogrow.domain.model.ChatMessage
+import com.pemrogamanmobile.hydrogrow.domain.model.Garden
+import com.pemrogamanmobile.hydrogrow.domain.model.Plant
 import com.pemrogamanmobile.hydrogrow.domain.usecase.ai.chatbot.ChatBotUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.garden.GardenUseCase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.plant.PlantUseCase
 import com.pemrogamanmobile.hydrogrow.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
 class ChatBotScreenViewModel @Inject constructor(
-    private val chatBotUseCase: ChatBotUseCase
+    private val chatBotUseCase: ChatBotUseCase,
+    private val gardenUseCase: GardenUseCase, // BARU
+    private val plantUseCase: PlantUseCase    // BARU
 ) : ViewModel() {
 
     private val _chatId = mutableStateOf<String?>(null)
@@ -37,10 +45,82 @@ class ChatBotScreenViewModel @Inject constructor(
     private val _historyLoading = mutableStateOf(false)
     val historyLoading: State<Boolean> = _historyLoading
 
+    private val _gardens = mutableStateOf<List<Garden>>(emptyList())
+    val gardens: State<List<Garden>> = _gardens
+
+    private val _plants = mutableStateOf<List<Plant>>(emptyList())
+    val plants: State<List<Plant>> = _plants
+
+    // Pair<ID, Nama, Tipe("garden"/"plant")>
+    private val _selectedContext = mutableStateOf<Triple<String, String, String>?>(null)
+    val selectedContext: State<Triple<String, String, String>?> = _selectedContext
+
+
     init {
         // ✅ FIX: Memisahkan proses observe dan refresh data
         observeChatHistory() // 1. Mulai amati data dari database lokal
         refreshChatHistory() // 2. Minta data baru dari jaringan
+        // BARU: Muat data untuk konteks saat ViewModel dibuat
+        loadGardens()
+        loadPlants()
+    }
+
+    // BARU: Fungsi untuk memuat daftar kebun dan tanaman
+    private fun loadGardens() {
+        gardenUseCase.getAllGardens().onEach {
+            _gardens.value = it
+        }.launchIn(viewModelScope)
+    }
+
+    private fun loadPlants() {
+        viewModelScope.launch {
+            _plants.value = plantUseCase.getAllPlants()
+        }
+    }
+
+    // BARU: Fungsi untuk mengelola state konteks
+    fun selectContext(id: String, name: String, type: String) {
+        _selectedContext.value = Triple(id, name, type)
+    }
+
+    fun clearContext() {
+        _selectedContext.value = null
+    }
+
+    // BARU: Fungsi untuk menambahkan pesan gambar ke UI secara instan
+    fun addVisualMessage(uri: Uri) {
+        val imageMessage = ChatMessage(role = ChatMessage.ROLE_IMAGE, content = uri.toString())
+        _messages.value += imageMessage
+    }
+
+    // BARU: Fungsi untuk mengirim pesan dengan gambar
+    fun sendMessageWithImage(userMessage: String, imageFile: File) {
+        if (userMessage.isBlank()) return
+
+        // Hapus pesan visual (hanya URI) dan ganti dengan pesan teks asli
+        _messages.value = _messages.value.dropLast(1)
+        val newUserMessage = ChatMessage(role = ChatMessage.ROLE_USER, content = userMessage)
+        _messages.value += newUserMessage
+
+        _isTyping.value = true
+        _error.value = null
+
+        viewModelScope.launch {
+            chatBotUseCase.startNewConversationWithImageDetection(userMessage, imageFile).onEach { resource ->
+                when (resource) {
+                    is Resource.Loading -> { /* isTyping sudah true */ }
+                    is Resource.Success -> {
+                        refreshChatHistory()
+                        refreshConversation()
+                    }
+                    is Resource.Error -> {
+                        _isTyping.value = false
+                        _error.value = resource.message ?: "Terjadi kesalahan pada deteksi gambar."
+                        _messages.value = _messages.value.dropLast(1)
+                    }
+                }
+            }.launchIn(viewModelScope)
+        }
     }
 
     /**
@@ -95,6 +175,7 @@ class ChatBotScreenViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
+    // MODIFIKASI: sendMessage menjadi context-aware
     fun sendMessage(userMessage: String) {
         if (userMessage.isBlank()) return
 
@@ -104,25 +185,38 @@ class ChatBotScreenViewModel @Inject constructor(
         _error.value = null
 
         viewModelScope.launch {
+            val context = _selectedContext.value
             val currentChatId = _chatId.value
-            val useCaseFlow = if (currentChatId == null) {
-                chatBotUseCase.startNewConversation(userMessage)
-            } else {
-                chatBotUseCase.continueConversation(currentChatId, userMessage)
+
+            val useCaseFlow = when {
+                // Kasus 1: Ada konteks terpilih (Garden/Plant)
+                context != null -> {
+                    val (id, _, type) = context
+                    chatBotUseCase.startNewConversationWithChosenData(userMessage, id, type)
+                }
+                // Kasus 2: Melanjutkan percakapan yang ada
+                currentChatId != null -> {
+                    chatBotUseCase.continueConversation(currentChatId, userMessage)
+                }
+                // Kasus 3: Memulai percakapan baru tanpa konteks
+                else -> {
+                    chatBotUseCase.startNewConversation(userMessage)
+                }
             }
+
+            // Hapus konteks setelah digunakan untuk satu pertanyaan
+            clearContext()
 
             useCaseFlow.onEach { resource ->
                 when (resource) {
                     is Resource.Loading -> { /* isTyping sudah true */ }
                     is Resource.Success -> {
-                        // ✅ FIX: Panggil fungsi refresh yang benar
-                        refreshChatHistory()    // Refresh daftar history di drawer
-                        refreshConversation()   // Refresh pesan di chat yang aktif
+                        refreshChatHistory()
+                        refreshConversation()
                     }
                     is Resource.Error -> {
                         _isTyping.value = false
                         _error.value = resource.message ?: "Terjadi kesalahan."
-                        // Hapus pesan user yang gagal dikirim dari UI
                         _messages.value = _messages.value.dropLast(1)
                     }
                 }
