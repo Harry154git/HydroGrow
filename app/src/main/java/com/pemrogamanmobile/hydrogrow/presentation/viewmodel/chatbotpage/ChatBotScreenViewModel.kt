@@ -4,6 +4,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pemrogamanmobile.hydrogrow.domain.model.ChatBot
 import com.pemrogamanmobile.hydrogrow.domain.model.ChatMessage
 import com.pemrogamanmobile.hydrogrow.domain.usecase.ai.chatbot.ChatBotUseCase
 import com.pemrogamanmobile.hydrogrow.util.Resource
@@ -18,35 +19,68 @@ class ChatBotScreenViewModel @Inject constructor(
     private val chatBotUseCase: ChatBotUseCase
 ) : ViewModel() {
 
-    // State untuk menyimpan ID percakapan saat ini. Null jika percakapan baru.
     private val _chatId = mutableStateOf<String?>(null)
+    val chatId: State<String?> = _chatId
 
-    // State untuk daftar pesan dalam percakapan. Menggunakan ChatMessage.
     private val _messages = mutableStateOf<List<ChatMessage>>(emptyList())
     val messages: State<List<ChatMessage>> = _messages
 
-    // State untuk menunjukkan apakah AI sedang "mengetik" atau memproses.
     private val _isTyping = mutableStateOf(false)
     val isTyping: State<Boolean> = _isTyping
 
-    // State untuk menampilkan pesan error jika terjadi.
     private val _error = mutableStateOf<String?>(null)
     val error: State<String?> = _error
 
+    // State baru untuk menyimpan riwayat percakapan
+    private val _chatHistory = mutableStateOf<List<ChatBot>>(emptyList())
+    val chatHistory: State<List<ChatBot>> = _chatHistory
+
+    // State baru untuk loading riwayat
+    private val _historyLoading = mutableStateOf(false)
+    val historyLoading: State<Boolean> = _historyLoading
+
+    init {
+        // Langsung muat riwayat saat ViewModel dibuat
+        loadChatHistory()
+    }
+
     /**
-     * Fungsi untuk menginisialisasi ViewModel dengan percakapan yang sudah ada.
-     * Panggil fungsi ini dari UI jika pengguna membuka riwayat chat.
-     * @param chatbotId ID dari percakapan yang akan dimuat.
+     * [BARU] Memuat seluruh riwayat percakapan untuk ditampilkan di drawer.
      */
+    private fun loadChatHistory() {
+        chatBotUseCase.getChatHistory().onEach { resource ->
+            when (resource) {
+                is Resource.Loading -> _historyLoading.value = true
+                is Resource.Success -> {
+                    _historyLoading.value = false
+                    // Urutkan dari yang terbaru
+                    _chatHistory.value = resource.data?.sortedByDescending { it.updatedAt } ?: emptyList()
+                }
+                is Resource.Error -> {
+                    _historyLoading.value = false
+                    _error.value = resource.message ?: "Gagal memuat riwayat."
+                }
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    /**
+     * [BARU] Fungsi untuk memulai percakapan baru.
+     * Akan mereset state percakapan saat ini di UI.
+     */
+    fun startNewChat() {
+        _chatId.value = null
+        _messages.value = emptyList()
+        _isTyping.value = false
+        _error.value = null
+    }
+
     fun loadChat(chatbotId: String) {
-        // Jika ID sama dengan yang sudah dimuat, tidak perlu load ulang
-        if (chatbotId == _chatId.value) return
+        if (chatbotId == _chatId.value && _messages.value.isNotEmpty()) return
 
         chatBotUseCase.getChatBotById(chatbotId).onEach { resource ->
             when (resource) {
-                is Resource.Loading -> {
-                    _isTyping.value = true
-                }
+                is Resource.Loading -> _isTyping.value = true
                 is Resource.Success -> {
                     _isTyping.value = false
                     resource.data?.let { chatBot ->
@@ -62,46 +96,33 @@ class ChatBotScreenViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    /**
-     * Fungsi utama untuk mengirim pesan.
-     * Fungsi ini akan otomatis menentukan apakah harus memulai percakapan baru
-     * atau melanjutkan yang sudah ada berdasarkan _chatId.
-     * @param userMessage Teks pesan dari pengguna.
-     */
     fun sendMessage(userMessage: String) {
         if (userMessage.isBlank()) return
 
-        // 1. Tampilkan pesan pengguna langsung di UI untuk responsivitas.
         val newUserMessage = ChatMessage(role = ChatMessage.ROLE_USER, content = userMessage)
         _messages.value += newUserMessage
         _isTyping.value = true
-        _error.value = null // Hapus error sebelumnya
+        _error.value = null
 
         viewModelScope.launch {
-            // Tentukan use case yang akan dipanggil
             val currentChatId = _chatId.value
             val useCaseFlow = if (currentChatId == null) {
-                // Mulai percakapan baru jika ID null
                 chatBotUseCase.startNewConversation(userMessage)
             } else {
-                // Lanjutkan percakapan jika ID sudah ada
                 chatBotUseCase.continueConversation(currentChatId, userMessage)
             }
 
-            // 2. Panggil use case dan tangani hasilnya
             useCaseFlow.onEach { resource ->
                 when (resource) {
-                    is Resource.Loading -> {
-                        // isTyping sudah true
-                    }
+                    is Resource.Loading -> { /* isTyping sudah true */ }
                     is Resource.Success -> {
-                        // Jika berhasil, muat ulang data chat untuk mendapatkan balasan dari AI
+                        // Setelah sukses, refresh history dan conversation
+                        loadChatHistory() // Refresh daftar history
                         refreshConversation()
                     }
                     is Resource.Error -> {
                         _isTyping.value = false
                         _error.value = resource.message ?: "Terjadi kesalahan."
-                        // Hapus pesan pengguna yang gagal dikirim agar bisa dicoba lagi
                         _messages.value = _messages.value.dropLast(1)
                     }
                 }
@@ -109,38 +130,23 @@ class ChatBotScreenViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Memuat ulang data percakapan.
-     * Dipanggil setelah pesan berhasil dikirim untuk mendapatkan balasan AI.
-     */
     private fun refreshConversation() {
         val currentChatId = _chatId.value
         if (currentChatId != null) {
-            // Jika ID sudah ada, cukup muat ulang chat tersebut
             loadChat(currentChatId)
         } else {
-            // Jika ini adalah percakapan baru, kita perlu mencari ID chat yang baru dibuat.
-            // Cara terbaik adalah mengambil chat terakhir dari riwayat.
-            chatBotUseCase.getChatHistory().onEach { resource ->
-                if (resource is Resource.Success) {
-                    // Cari chat yang paling baru diperbarui (updatedAt)
-                    val latestChat = resource.data?.maxByOrNull { it.updatedAt }
-                    latestChat?.let {
-                        // Muat chat yang baru ditemukan
-                        loadChat(it.id)
-                    }
-                } else if (resource is Resource.Error){
-                    _error.value = resource.message ?: "Gagal menyegarkan percakapan."
-                }
-                // Hentikan 'typing' setelah selesai refresh
+            // Jika percakapan baru, ID baru dibuat di backend.
+            // Ambil ID dari chat paling baru di history yang sudah di-refresh.
+            val latestChat = _chatHistory.value.firstOrNull()
+            if (latestChat != null) {
+                loadChat(latestChat.id)
+            } else {
                 _isTyping.value = false
-            }.launchIn(viewModelScope)
+                _error.value = "Gagal menemukan percakapan baru."
+            }
         }
     }
 
-    /**
-     * Fungsi untuk membersihkan pesan error setelah ditampilkan di UI (misal: di Snackbar).
-     */
     fun clearError() {
         _error.value = null
     }

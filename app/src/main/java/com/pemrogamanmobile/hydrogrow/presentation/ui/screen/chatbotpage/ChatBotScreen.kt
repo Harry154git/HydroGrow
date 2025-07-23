@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -25,114 +26,244 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.pemrogamanmobile.hydrogrow.domain.model.ChatBot
 import com.pemrogamanmobile.hydrogrow.domain.model.ChatMessage
 import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.chatbotpage.ChatBotScreenViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatBotScreen(
     navController: NavController,
     viewModel: ChatBotScreenViewModel = hiltViewModel(),
-    chatbotId: String? = null // Terima ID dari argumen navigasi
+    chatbotId: String? = null
 ) {
-    // Muat percakapan jika chatbotId diberikan saat pertama kali screen dibuat
-    LaunchedEffect(chatbotId) {
-        if (chatbotId != null) {
-            viewModel.loadChat(chatbotId)
-        }
-    }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    // Ambil semua state yang diperlukan dari ViewModel
+    // Ambil state dari ViewModel
     val messages by viewModel.messages
     val isTyping by viewModel.isTyping
     val error by viewModel.error
+    val chatHistory by viewModel.chatHistory
+    val activeChatId by viewModel.chatId
     var userInput by rememberSaveable { mutableStateOf("") }
 
-    // Warna dari desain
-    val backgroundColor = Color(0xFFE9FDD9)
-    val sendButtonColor = Color(0xFF59A869)
-
-    // State untuk Snackbar
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    // Tampilkan Snackbar jika ada error
-    LaunchedEffect(error) {
-        error?.let {
-            snackbarHostState.showSnackbar(
-                message = it,
-                duration = SnackbarDuration.Long
-            )
-            viewModel.clearError() // Hapus error setelah ditampilkan
+    // Muat percakapan jika chatbotId dari argumen navigasi diberikan
+    LaunchedEffect(chatbotId) {
+        if (chatbotId != null) {
+            viewModel.loadChat(chatbotId)
+        } else {
+            // Jika tidak ada id, pastikan ini adalah state chat baru
+            // atau muat chat teratas dari history jika ada
+            if (messages.isEmpty() && chatHistory.isNotEmpty()) {
+                viewModel.loadChat(chatHistory.first().id)
+            } else if (messages.isEmpty() && chatHistory.isEmpty()){
+                viewModel.startNewChat()
+            }
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = backgroundColor,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("ChatBot", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { /* TODO: Aksi untuk menu */ }) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menu")
+    val backgroundColor = Color(0xFFE9FDD9)
+    val sendButtonColor = Color(0xFF59A869)
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(error) {
+        error?.let {
+            snackbarHostState.showSnackbar(message = it, duration = SnackbarDuration.Long)
+            viewModel.clearError()
+        }
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ChatHistoryDrawer(
+                histories = chatHistory,
+                currentChatId = activeChatId,
+                onHistoryClick = { historyId ->
+                    scope.launch { drawerState.close() }
+                    // Cukup panggil loadChat, LaunchedEffect akan menangani sisanya
+                    // Atau bisa juga dengan navigasi
+                    navController.navigate("your_chat_route/$historyId") {
+                        // Opsi navigasi untuk menghindari tumpukan backstack yang sama
+                        popUpTo(navController.graph.startDestinationId)
+                        launchSingleTop = true
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
-        },
-        bottomBar = {
-            UserInputArea(
-                value = userInput,
-                onValueChange = { userInput = it },
-                onSend = {
-                    viewModel.sendMessage(userInput)
-                    userInput = ""
-                },
-                buttonColor = sendButtonColor
+                onNewChatClick = {
+                    scope.launch { drawerState.close() }
+                    viewModel.startNewChat()
+                    // Navigasi ke screen chat baru tanpa ID untuk membersihkan URL
+                    navController.navigate("your_chat_route") {
+                        popUpTo(navController.graph.startDestinationId)
+                        launchSingleTop = true
+                    }
+                }
             )
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp)
-        ) {
-            // Tampilkan UI awal hanya jika tidak ada pesan dan AI tidak sedang mengetik
-            if (messages.isEmpty() && !isTyping) {
-                InitialChatView(
-                    onSuggestionClick = { suggestion ->
-                        userInput = suggestion
-                        // Opsional: langsung kirim pesan saat sugesti diklik
-                        // viewModel.sendMessage(suggestion)
-                    }
+    ) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("ChatBot", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Default.Menu, contentDescription = "Buka Menu")
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.White // Latar belakang TopAppBar putih
+                    )
                 )
-            } else {
-                // Tampilkan daftar chat jika sudah ada percakapan
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    state = rememberLazyListState(),
-                    reverseLayout = true // Pesan baru muncul dari bawah
-                ) {
-                    // Tampilkan indikator "mengetik" di paling bawah
-                    if (isTyping) {
-                        item {
-                            ChatBubble(ChatMessage(role = "model", content = "..."))
-                            Spacer(modifier = Modifier.height(8.dp))
+            },
+            bottomBar = {
+                UserInputArea(
+                    value = userInput,
+                    onValueChange = { userInput = it },
+                    onSend = {
+                        if (userInput.isNotBlank()) {
+                            viewModel.sendMessage(userInput)
+                            userInput = ""
+                        }
+                    },
+                    buttonColor = sendButtonColor
+                )
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(backgroundColor) // Latar belakang utama dipindah ke sini
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
+            ) {
+                if (messages.isEmpty() && !isTyping) {
+                    InitialChatView(
+                        onSuggestionClick = { suggestion ->
+                            userInput = suggestion
+                            viewModel.sendMessage(suggestion)
+                            userInput = ""
+                        }
+                    )
+                } else {
+                    val listState = rememberLazyListState()
+                    // Auto-scroll ke bawah saat pesan baru masuk
+                    LaunchedEffect(messages) {
+                        if (messages.isNotEmpty()) {
+                            listState.animateScrollToItem(0)
                         }
                     }
-
-                    items(messages.reversed()) { message ->
-                        ChatBubble(message)
-                        Spacer(modifier = Modifier.height(8.dp))
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        state = listState,
+                        reverseLayout = true
+                    ) {
+                        if (isTyping) {
+                            item {
+                                ChatBubble(ChatMessage(role = "model", content = "..."))
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                        items(messages.reversed()) { message ->
+                            ChatBubble(message)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
             }
         }
     }
 }
+
+
+@Composable
+private fun ChatHistoryDrawer(
+    histories: List<ChatBot>,
+    currentChatId: String?,
+    onHistoryClick: (String) -> Unit,
+    onNewChatClick: () -> Unit
+) {
+    ModalDrawerSheet(
+        modifier = Modifier.fillMaxWidth(0.8f) // Lebar drawer 80%
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Tombol "mulai percakapan baru"
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onNewChatClick)
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = "Percakapan Baru",
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = "mulai percakapan baru",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Divider()
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Judul "History"
+            Text(
+                text = "History",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            // Daftar riwayat percakapan
+            LazyColumn {
+                items(histories, key = { it.id }) { history ->
+                    HistoryItem(
+                        title = history.title,
+                        isSelected = history.id == currentChatId,
+                        onClick = { onHistoryClick(history.id) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryItem(
+    title: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val backgroundColor = if (isSelected) Color(0xFFD7F5D7) else Color.Transparent
+    val textColor = if (isSelected) Color.Black else Color.DarkGray
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = title,
+            color = textColor,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            fontSize = 14.sp
+        )
+    }
+    Spacer(modifier = Modifier.height(4.dp))
+}
+
+// Composable lainnya (InitialChatView, SuggestionCard, UserInputArea, ChatBubble) tetap sama...
 
 @Composable
 private fun InitialChatView(onSuggestionClick: (String) -> Unit) {
@@ -146,7 +277,8 @@ private fun InitialChatView(onSuggestionClick: (String) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = "👋 Halo Anna !",
@@ -220,7 +352,7 @@ private fun UserInputArea(
                     unfocusedIndicatorColor = Color.Transparent,
                 )
             )
-            IconButton(onClick = onSend) {
+            IconButton(onClick = onSend, enabled = value.isNotBlank()) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -254,7 +386,7 @@ private fun ChatBubble(message: ChatMessage) {
             modifier = Modifier
                 .background(bubbleColor, shape = RoundedCornerShape(12.dp))
                 .padding(12.dp)
-                .widthIn(max = 280.dp),
+                .widthIn(max = 300.dp),
         ) {
             Text(message.content)
         }
