@@ -1,8 +1,8 @@
 package com.pemrogamanmobile.hydrogrow.presentation.ui.screen.chatbotpage
 
-import android.Manifest // BARU
+import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager // BARU
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,7 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat // BARU
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -86,6 +86,7 @@ fun ChatBotScreen(
     var showContextDialog by remember { mutableStateOf<String?>(null) } // "garden" atau "plant"
     var showContextTypeSelectionDialog by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
 
     // Launcher untuk mengambil gambar dari galeri
@@ -109,22 +110,7 @@ fun ChatBotScreen(
         }
     }
 
-    // Muat percakapan jika chatbotId dari argumen navigasi diberikan
-    LaunchedEffect(chatbotId) {
-        if (chatbotId != null) {
-            viewModel.loadChat(chatbotId)
-        } else {
-            if (messages.isEmpty()) {
-                viewModel.startNewChat()
-            }
-        }
-    }
-
-    val backgroundColor = Color(0xFFE9FDD9)
-    val sendButtonColor = Color(0xFF59A869)
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    // BARU: Launcher untuk meminta izin kamera
+    // Launcher untuk meminta izin kamera
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -144,6 +130,20 @@ fun ChatBotScreen(
             }
         }
     }
+
+    // Muat percakapan jika chatbotId dari argumen navigasi diberikan
+    LaunchedEffect(chatbotId) {
+        if (chatbotId != null) {
+            viewModel.loadChat(chatbotId)
+        } else {
+            if (messages.isEmpty()) {
+                viewModel.startNewChat()
+            }
+        }
+    }
+
+    val backgroundColor = Color(0xFFE9FDD9)
+    val sendButtonColor = Color(0xFF59A869)
 
     LaunchedEffect(error) {
         error?.let {
@@ -192,13 +192,11 @@ fun ChatBotScreen(
                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                     if (!sheetState.isVisible) {
                         showAttachmentSheet = false
-                        // MODIFIKASI: Cek izin sebelum meluncurkan kamera
                         when (PackageManager.PERMISSION_GRANTED) {
                             ContextCompat.checkSelfPermission(
                                 context,
                                 Manifest.permission.CAMERA
                             ) -> {
-                                // Izin sudah ada, langsung luncurkan kamera
                                 val file = context.createImageFile()
                                 val uri = FileProvider.getUriForFile(
                                     Objects.requireNonNull(context),
@@ -208,7 +206,6 @@ fun ChatBotScreen(
                                 cameraLauncher.launch(uri)
                             }
                             else -> {
-                                // Minta izin kepada pengguna
                                 permissionLauncher.launch(Manifest.permission.CAMERA)
                             }
                         }
@@ -328,7 +325,8 @@ fun ChatBotScreen(
                         state = listState,
                         contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        items(messages, key = { it.timestamp }) { message ->
+                        // MODIFIKASI: Kunci unik untuk item list, mengatasi crash.
+                        items(messages, key = { "${it.timestamp}-${it.content}" }) { message ->
                             ChatBubble(message)
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -527,7 +525,7 @@ private fun UserInputArea(
                     unfocusedIndicatorColor = Color.Transparent,
                 )
             )
-            IconButton(onClick = onSend, enabled = value.isNotBlank()) {
+            IconButton(onClick = onSend, enabled = value.isNotBlank() ) { // Memungkinkan kirim jika hanya ada gambar
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -558,10 +556,9 @@ private fun ChatBubble(message: ChatMessage) {
             .wrapContentWidth(alignment)
     ) {
         Column(horizontalAlignment = alignment) {
-            // Tampilkan gambar jika rolenya IMAGE
             if (message.role == ChatMessage.ROLE_IMAGE) {
                 AsyncImage(
-                    model = message.content, // content berisi URI
+                    model = message.content,
                     contentDescription = "Gambar dari Pengguna",
                     modifier = Modifier
                         .sizeIn(maxWidth = 250.dp, maxHeight = 250.dp)
@@ -569,8 +566,6 @@ private fun ChatBubble(message: ChatMessage) {
                     contentScale = ContentScale.Crop
                 )
             }
-
-            // Tampilkan bubble teks jika konten tidak kosong dan bukan pesan gambar murni
             if (message.content.isNotEmpty() && message.role != ChatMessage.ROLE_IMAGE) {
                 Box(
                     modifier = Modifier
@@ -676,7 +671,14 @@ fun <T> ItemListDialog(
                 Text("Tidak ada data tersedia.")
             } else {
                 LazyColumn {
-                    items(items) { item ->
+                    // MODIFIKASI: Kunci unik untuk item list (praktik terbaik).
+                    items(items, key = { item ->
+                        when (item) {
+                            is Garden -> item.id
+                            is Plant -> item.id
+                            else -> item.hashCode()
+                        }
+                    }) { item ->
                         val (id, name) = when (item) {
                             is Garden -> item.id to item.gardenName
                             is Plant -> item.id to item.plantName
