@@ -13,10 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.chatbotpage.ChatBotScreen
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.bottomnavigationbar.BottomNavigationBar
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.home.HomeScreen
@@ -35,6 +37,9 @@ fun AppNav() {
     val appNavViewModel: AppNavViewModel = hiltViewModel()
     val appState = appNavViewModel.appState.collectAsStateWithLifecycle()
 
+    // Definisikan rute chatbot yang baru di sini agar konsisten
+    val chatbotRoute = "chatbot_screen"
+
     if (appState.value.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -49,7 +54,6 @@ fun AppNav() {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
-        // Tentukan screen mana yang tidak akan menampilkan navigation bar
         val screensWithoutBar = listOf("onboarding", "login")
         val showBottomBar = currentRoute !in screensWithoutBar
 
@@ -93,19 +97,8 @@ fun AppNav() {
                     }
                 }
 
-                composable(BottomNavItem.Chatbot.route) {
-                    ChatBotScreen(navController)
-                }
-
                 composable(BottomNavItem.Postings.route) {
-//                    val viewModel: ProfileViewModel = hiltViewModel()
-//                    ProfileScreen(
-//                        viewModel = viewModel,
-//                        onLogoutSuccess = {
-//                            navController.navigate("login") { popUpTo(BottomNavItem.Home.route) { inclusive = true } }
-//                        },
-//                        onBack = { navController.popBackStack() }
-//                    )
+                    // Konten untuk Postings, jika ada, diletakkan di sini
                 }
 
                 composable(BottomNavItem.Profil.route) {
@@ -116,6 +109,21 @@ fun AppNav() {
                             navController.navigate("login") { popUpTo(BottomNavItem.Home.route) { inclusive = true } }
                         },
                         onBack = { navController.popBackStack() }
+                    )
+                }
+
+                // --- Rute untuk ChatBotScreen yang bisa menerima ID ---
+                composable(
+                    route = "$chatbotRoute?chatbotId={chatbotId}",
+                    arguments = listOf(navArgument("chatbotId") {
+                        type = NavType.StringType
+                        nullable = true // Penting! Agar argumen bersifat opsional
+                    })
+                ) { backStackEntry ->
+                    val chatbotId = backStackEntry.arguments?.getString("chatbotId")
+                    ChatBotScreen(
+                        navController = navController,
+                        chatbotId = chatbotId // Teruskan ID ke screen
                     )
                 }
 

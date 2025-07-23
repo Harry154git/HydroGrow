@@ -13,7 +13,7 @@ sealed class BottomNavItem(val route: String, val icon: Int, val title: String) 
     // Ganti R.drawable.ic_... dengan nama file ikon yang kamu miliki
     object Home : BottomNavItem("home", R.drawable.ic_home, "Home")
     object Community : BottomNavItem("community", R.drawable.ic_community, "Komunitas")
-    object Chatbot : BottomNavItem("chatbot", R.drawable.ic_chatbot, "Chatbot")
+    object Chatbot : BottomNavItem("chatbot_screen", R.drawable.ic_chatbot, "Chatbot")
     object Postings : BottomNavItem("profile_screen", R.drawable.ic_my_posting, "My Postings")
     object Profil : BottomNavItem("info", R.drawable.ic_profile_info, "Info Profil")
 }

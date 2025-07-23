@@ -54,11 +54,7 @@ fun ChatBotScreen(
         if (chatbotId != null) {
             viewModel.loadChat(chatbotId)
         } else {
-            // Jika tidak ada id, pastikan ini adalah state chat baru
-            // atau muat chat teratas dari history jika ada
-            if (messages.isEmpty() && chatHistory.isNotEmpty()) {
-                viewModel.loadChat(chatHistory.first().id)
-            } else if (messages.isEmpty() && chatHistory.isEmpty()){
+            if (messages.isEmpty()) {
                 viewModel.startNewChat()
             }
         }
@@ -83,20 +79,16 @@ fun ChatBotScreen(
                 currentChatId = activeChatId,
                 onHistoryClick = { historyId ->
                     scope.launch { drawerState.close() }
-                    // Cukup panggil loadChat, LaunchedEffect akan menangani sisanya
-                    // Atau bisa juga dengan navigasi
-                    navController.navigate("your_chat_route/$historyId") {
-                        // Opsi navigasi untuk menghindari tumpukan backstack yang sama
-                        popUpTo(navController.graph.startDestinationId)
+                    // PERBAIKAN: Gunakan rute yang benar "chatbot_screen"
+                    navController.navigate("chatbot_screen?chatbotId=$historyId") {
                         launchSingleTop = true
                     }
                 },
                 onNewChatClick = {
                     scope.launch { drawerState.close() }
                     viewModel.startNewChat()
-                    // Navigasi ke screen chat baru tanpa ID untuk membersihkan URL
-                    navController.navigate("your_chat_route") {
-                        popUpTo(navController.graph.startDestinationId)
+                    // PERBAIKAN: Gunakan rute yang benar "chatbot_screen" tanpa argumen
+                    navController.navigate("chatbot_screen") {
                         launchSingleTop = true
                     }
                 }
@@ -114,7 +106,7 @@ fun ChatBotScreen(
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.White // Latar belakang TopAppBar putih
+                        containerColor = Color.White
                     )
                 )
             },
@@ -135,7 +127,7 @@ fun ChatBotScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(backgroundColor) // Latar belakang utama dipindah ke sini
+                    .background(backgroundColor)
                     .padding(paddingValues)
                     .padding(horizontal = 16.dp)
             ) {
@@ -149,7 +141,6 @@ fun ChatBotScreen(
                     )
                 } else {
                     val listState = rememberLazyListState()
-                    // Auto-scroll ke bawah saat pesan baru masuk
                     LaunchedEffect(messages) {
                         if (messages.isNotEmpty()) {
                             listState.animateScrollToItem(0)
@@ -178,6 +169,7 @@ fun ChatBotScreen(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChatHistoryDrawer(
     histories: List<ChatBot>,
@@ -186,10 +178,9 @@ private fun ChatHistoryDrawer(
     onNewChatClick: () -> Unit
 ) {
     ModalDrawerSheet(
-        modifier = Modifier.fillMaxWidth(0.8f) // Lebar drawer 80%
+        modifier = Modifier.fillMaxWidth(0.8f)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Tombol "mulai percakapan baru"
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -214,7 +205,6 @@ private fun ChatHistoryDrawer(
             Divider()
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Judul "History"
             Text(
                 text = "History",
                 fontWeight = FontWeight.Bold,
@@ -222,7 +212,6 @@ private fun ChatHistoryDrawer(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Daftar riwayat percakapan
             LazyColumn {
                 items(histories, key = { it.id }) { history ->
                     HistoryItem(
@@ -263,8 +252,6 @@ private fun HistoryItem(
     Spacer(modifier = Modifier.height(4.dp))
 }
 
-// Composable lainnya (InitialChatView, SuggestionCard, UserInputArea, ChatBubble) tetap sama...
-
 @Composable
 private fun InitialChatView(onSuggestionClick: (String) -> Unit) {
     val suggestions = listOf(
@@ -275,7 +262,7 @@ private fun InitialChatView(onSuggestionClick: (String) -> Unit) {
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(top = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center

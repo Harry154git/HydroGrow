@@ -6,45 +6,70 @@ import com.pemrogamanmobile.hydrogrow.domain.model.ChatMessage
 import com.pemrogamanmobile.hydrogrow.util.Resource
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Interface untuk ChatBotRepository.
+ *
+ * Mendefinisikan kontrak untuk semua operasi data yang terkait dengan fitur chatbot.
+ * Interface ini berada di dalam Domain Layer dan tidak memiliki pengetahuan tentang
+ * implementasi teknis seperti Firebase atau Room.
+ */
 interface ChatBotRepository {
 
     /**
-     * Mengambil seluruh riwayat percakapan untuk pengguna saat ini.
-     * Menerapkan strategi cache network-first.
-     * @return Flow yang memancarkan status loading, error, atau sukses dengan daftar ChatBot.
+     * Mengambil riwayat percakapan dari sumber data utama (cache/database lokal).
+     *
+     * @return Sebuah Flow yang akan secara reaktif mengirim daftar percakapan
+     * setiap kali ada perubahan pada data.
      */
-    fun getChatHistory(): Flow<Resource<List<ChatBot>>>
+    fun getChatHistory(): Flow<List<ChatBot>>
 
-    // Di dalam interface ChatBotRepository
+    /**
+     * Memicu pembaruan/sinkronisasi data riwayat percakapan dari jaringan (network).
+     * Hasil dari pembaruan ini akan secara otomatis terpancar melalui Flow dari `getChatHistory()`.
+     *
+     * @return Resource yang menandakan status dari operasi sinkronisasi (Success/Error).
+     */
+    suspend fun refreshChatHistory(): Resource<Unit>
+
+    /**
+     * Mengambil satu data percakapan spesifik berdasarkan ID-nya.
+     *
+     * @param chatId ID unik dari percakapan yang dicari.
+     * @return Sebuah Flow yang berisi Resource dari objek ChatBot.
+     */
     fun getChatById(chatId: String): Flow<Resource<ChatBot>>
 
     /**
-     * Menambahkan sesi percakapan baru ke database lokal dan Firestore.
-     * @param chat Objek ChatBot yang akan dibuat.
-     * @return Resource yang menandakan sukses atau gagal.
+     * Menambahkan percakapan baru ke sumber data.
+     *
+     * @param chat Objek ChatBot yang akan ditambahkan.
+     * @return Resource yang menandakan status operasi penambahan.
      */
     suspend fun addChat(chat: ChatBot): Resource<Unit>
 
     /**
-     * Memperbarui sesi percakapan yang sudah ada.
+     * Memperbarui data percakapan yang sudah ada.
+     *
      * @param chat Objek ChatBot dengan data yang sudah diperbarui.
-     * @return Resource yang menandakan sukses atau gagal.
+     * @return Resource yang menandakan status operasi pembaruan.
      */
     suspend fun updateChat(chat: ChatBot): Resource<Unit>
 
     /**
-     * Menambahkan pesan baru (teks dan/atau gambar) ke sebuah sesi percakapan.
-     * @param chatId ID dari percakapan yang akan ditambahkan pesannya.
-     * @param message Objek pesan teks dari pengguna.
-     * @param imageUri (Opsional) URI dari gambar yang akan diunggah.
-     * @return Resource yang menandakan sukses atau gagal.
+     * Menambahkan sebuah pesan baru ke dalam percakapan yang sudah ada.
+     *
+     * @param chatId ID dari percakapan target.
+     * @param message Objek ChatMessage yang akan ditambahkan.
+     * @param imageUri (Opsional) URI dari gambar yang mungkin diunggah bersama pesan.
+     * @return Resource yang menandakan status operasi.
      */
     suspend fun addMessageToChat(chatId: String, message: ChatMessage, imageUri: Uri?): Resource<Unit>
 
     /**
-     * Menghapus sebuah sesi percakapan dari database lokal dan Firestore.
-     * @param chatId ID dari percakapan yang akan dihapus.
-     * @return Resource yang menandakan sukses atau gagal.
+     * Menghapus sebuah percakapan dari sumber data.
+     *
+     * @param chatId ID unik dari percakapan yang akan dihapus.
+     * @return Resource yang menandakan status operasi penghapusan.
      */
     suspend fun deleteChat(chatId: String): Resource<Unit>
 }

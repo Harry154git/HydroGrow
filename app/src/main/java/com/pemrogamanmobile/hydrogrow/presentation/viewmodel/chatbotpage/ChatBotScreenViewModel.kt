@@ -31,43 +31,42 @@ class ChatBotScreenViewModel @Inject constructor(
     private val _error = mutableStateOf<String?>(null)
     val error: State<String?> = _error
 
-    // State baru untuk menyimpan riwayat percakapan
     private val _chatHistory = mutableStateOf<List<ChatBot>>(emptyList())
     val chatHistory: State<List<ChatBot>> = _chatHistory
 
-    // State baru untuk loading riwayat
     private val _historyLoading = mutableStateOf(false)
     val historyLoading: State<Boolean> = _historyLoading
 
     init {
-        // Langsung muat riwayat saat ViewModel dibuat
-        loadChatHistory()
+        // ✅ FIX: Memisahkan proses observe dan refresh data
+        observeChatHistory() // 1. Mulai amati data dari database lokal
+        refreshChatHistory() // 2. Minta data baru dari jaringan
     }
 
     /**
-     * [BARU] Memuat seluruh riwayat percakapan untuk ditampilkan di drawer.
+     * ✅ FIX: Fungsi ini sekarang HANYA mengamati Flow dari database lokal.
+     * UI akan otomatis update setiap kali ada data baru di database.
      */
-    private fun loadChatHistory() {
-        chatBotUseCase.getChatHistory().onEach { resource ->
-            when (resource) {
-                is Resource.Loading -> _historyLoading.value = true
-                is Resource.Success -> {
-                    _historyLoading.value = false
-                    // Urutkan dari yang terbaru
-                    _chatHistory.value = resource.data?.sortedByDescending { it.updatedAt } ?: emptyList()
-                }
-                is Resource.Error -> {
-                    _historyLoading.value = false
-                    _error.value = resource.message ?: "Gagal memuat riwayat."
-                }
-            }
+    private fun observeChatHistory() {
+        chatBotUseCase.getChatHistory().onEach { history ->
+            _chatHistory.value = history // Tidak ada lagi 'Resource' wrapper
         }.launchIn(viewModelScope)
     }
 
     /**
-     * [BARU] Fungsi untuk memulai percakapan baru.
-     * Akan mereset state percakapan saat ini di UI.
+     * ✅ BARU: Fungsi untuk memicu sinkronisasi data dari jaringan ke database.
      */
+    private fun refreshChatHistory() {
+        viewModelScope.launch {
+            _historyLoading.value = true
+            val result = chatBotUseCase.refreshChatHistory()
+            if (result is Resource.Error) {
+                _error.value = result.message ?: "Gagal memuat riwayat."
+            }
+            _historyLoading.value = false
+        }
+    }
+
     fun startNewChat() {
         _chatId.value = null
         _messages.value = emptyList()
@@ -76,8 +75,8 @@ class ChatBotScreenViewModel @Inject constructor(
     }
 
     fun loadChat(chatbotId: String) {
-        if (chatbotId == _chatId.value && _messages.value.isNotEmpty()) return
-
+        // Tidak perlu cek, karena getChatById sekarang real-time,
+        // kita bisa berlangganan ulang untuk memastikan data terbaru.
         chatBotUseCase.getChatBotById(chatbotId).onEach { resource ->
             when (resource) {
                 is Resource.Loading -> _isTyping.value = true
@@ -116,13 +115,14 @@ class ChatBotScreenViewModel @Inject constructor(
                 when (resource) {
                     is Resource.Loading -> { /* isTyping sudah true */ }
                     is Resource.Success -> {
-                        // Setelah sukses, refresh history dan conversation
-                        loadChatHistory() // Refresh daftar history
-                        refreshConversation()
+                        // ✅ FIX: Panggil fungsi refresh yang benar
+                        refreshChatHistory()    // Refresh daftar history di drawer
+                        refreshConversation()   // Refresh pesan di chat yang aktif
                     }
                     is Resource.Error -> {
                         _isTyping.value = false
                         _error.value = resource.message ?: "Terjadi kesalahan."
+                        // Hapus pesan user yang gagal dikirim dari UI
                         _messages.value = _messages.value.dropLast(1)
                     }
                 }
@@ -133,10 +133,12 @@ class ChatBotScreenViewModel @Inject constructor(
     private fun refreshConversation() {
         val currentChatId = _chatId.value
         if (currentChatId != null) {
+            // Jika chat sudah ada, cukup panggil loadChat lagi.
+            // Karena getChatById real-time, ia akan dapat data terbaru.
             loadChat(currentChatId)
         } else {
-            // Jika percakapan baru, ID baru dibuat di backend.
-            // Ambil ID dari chat paling baru di history yang sudah di-refresh.
+            // Jika ini percakapan baru, ambil ID dari history yang sudah di-refresh.
+            // _chatHistory sudah dijamin terbaru karena refreshChatHistory() dipanggil sebelumnya.
             val latestChat = _chatHistory.value.firstOrNull()
             if (latestChat != null) {
                 loadChat(latestChat.id)
