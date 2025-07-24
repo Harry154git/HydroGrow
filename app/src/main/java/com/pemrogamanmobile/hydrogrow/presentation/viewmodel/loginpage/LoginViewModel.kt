@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.AuthCredential
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.pemrogamanmobile.hydrogrow.domain.model.User
 import com.pemrogamanmobile.hydrogrow.domain.usecase.auth.SignInWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +23,8 @@ sealed interface LoginState {
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val signInWithGoogleUseCase: SignInWithGoogleUseCase
+    private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
+    private val crashlytics: FirebaseCrashlytics
 ) : ViewModel() {
 
     // State yang akan diobservasi oleh UI
@@ -47,6 +49,7 @@ class LoginViewModel @Inject constructor(
                 }
                 .onFailure { exception ->
                     // Jika gagal, update state menjadi Error dengan pesan kesalahan
+                    crashlytics.log("Error : ${exception.message}")
                     uiState = LoginState.Error(exception.message)
                 }
         }

@@ -31,6 +31,7 @@ class AuthService @Inject constructor(
         return try {
             auth.signInWithCredential(credential).await().user
         } catch (e: Exception) {
+            crashlytics.log("Error : ${e.message}")
             crashlytics.recordException(e)
             throw e
         }
