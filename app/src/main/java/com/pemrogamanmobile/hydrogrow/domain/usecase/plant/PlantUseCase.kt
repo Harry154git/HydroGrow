@@ -118,7 +118,6 @@ class PlantUseCase @Inject constructor(
         NotificationHelper.sendHarvestNotification(context, plantId, plantName, imageUrl, message, notificationId)
     }
 
-    // ... (fungsi getPlantsByGarden, getPlantById, getAllPlants tetap sama) ...
     fun getPlantsByGarden(gardenId: String): Flow<List<Plant>> {
         return plantRepository.getPlantsByGarden(gardenId)
     }

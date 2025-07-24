@@ -46,9 +46,9 @@ fun AppNav() {
         }
     } else {
         val startDestination = when {
-            appState.value.isSignedIn -> BottomNavItem.Home.route
-            appState.value.isOnboardingCompleted -> "login"
-            else -> "onboarding"
+            //appState.value.isSignedIn -> BottomNavItem.Home.route
+            //appState.value.isOnboardingCompleted -> "login"
+            else -> "login"//"onboarding"
         }
 
         val navBackStackEntry by navController.currentBackStackEntryAsState()
