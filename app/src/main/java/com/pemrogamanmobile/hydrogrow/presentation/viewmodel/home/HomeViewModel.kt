@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.ktx.Firebase
+import com.pemrogamanmobile.hydrogrow.domain.usecase.game.GetGameUseCase
 import com.pemrogamanmobile.hydrogrow.domain.usecase.garden.GardenUseCase
 import com.pemrogamanmobile.hydrogrow.domain.usecase.preferences.GetCachedUserUseCase
 import com.pemrogamanmobile.hydrogrow.presentation.uistate.HomeUiState
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getCachedUserUseCase: GetCachedUserUseCase,
-    private val gardenUseCase: GardenUseCase
+    private val gardenUseCase: GardenUseCase,
+    private val getGameUseCase: GetGameUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -33,7 +35,6 @@ class HomeViewModel @Inject constructor(
         loadData()
     }
 
-    // Fungsi analytics tetap dipertahankan
     fun logViewProfile() {
         firebaseAnalytics.logEvent("view_profile", bundleOf("source" to "home_screen"))
     }
@@ -46,20 +47,21 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                // 1. Ambil data user dari cache untuk ditampilkan di UI
+                // 1. Ambil data user dari cache
                 val user = getCachedUserUseCase().first()
                 _uiState.update { it.copy(user = user) }
 
-                // 2. Ambil semua data kebun.
-                // Sesuai instruksi, menggunakan getAllGardens() tanpa userId.
+                // 2. Ambil semua data kebun
                 val gardens = gardenUseCase.getAllGardens().first()
                 _uiState.update { it.copy(gardens = gardens) }
 
+                // ✅ 3. AMBIL DATA GAME (JUMLAH PANEN)
+                val game = getGameUseCase().firstOrNull()
+                _uiState.update { it.copy(cupAmount = game?.cup ?: 0) }
+
             } catch (e: Exception) {
-                // Handle error jika terjadi kegagalan
                 _uiState.update { it.copy(error = e.message ?: "Gagal memuat data") }
             } finally {
-                // Pastikan loading state kembali ke false setelah selesai
                 _uiState.update { it.copy(isLoading = false) }
             }
         }

@@ -3,7 +3,7 @@ package com.pemrogamanmobile.hydrogrow.util
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Context // <-- PASTIKAN IMPORT INI YANG DIGUNAKAN
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -15,8 +15,8 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.pemrogamanmobile.hydrogrow.R
 import com.pemrogamanmobile.hydrogrow.presentation.MainActivity
-import android.content.pm.PackageManager // <-- Tambahkan import ini
-import androidx.core.content.ContextCompat // <-- Tambahkan import ini
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 
 object NotificationHelper {
 

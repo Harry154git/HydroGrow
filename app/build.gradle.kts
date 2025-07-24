@@ -9,6 +9,13 @@ plugins {
     alias(libs.plugins.google.firebase.crashlytics)
 }
 
+configurations.all {
+    resolutionStrategy {
+        force("androidx.work:work-runtime:2.10.2")
+        force("androidx.work:work-runtime-ktx:2.10.2")
+    }
+}
+
 android {
     namespace = "com.pemrogamanmobile.hydrogrow"
     compileSdk = 35
@@ -17,8 +24,8 @@ android {
         applicationId = "com.pemrogamanmobile.hydrogrow"
         minSdk = 26
         targetSdk = 35
-        versionCode = 24072501
-        versionName = "1.2.0.0"
+        versionCode = 24072503
+        versionName = "1.3.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -84,6 +91,9 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.hilt.work)
 
+    // ==> TAMBAHKAN BARIS INI: Compiler untuk Hilt-Work
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
+
     // Local Storage - Room (menggunakan KSP) & DataStore
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
@@ -102,7 +112,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
     // Background Work
-    implementation ("androidx.work:work-runtime-ktx:2.10.2")
+    implementation("androidx.work:work-runtime-ktx:2.10.2")
+    implementation("androidx.work:work-runtime:2.10.2")
 
     // Testing
     testImplementation(libs.junit)

@@ -1,72 +1,81 @@
 package com.pemrogamanmobile.hydrogrow.presentation.ui.components
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.WorkspacePremium
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import com.pemrogamanmobile.hydrogrow.R
-import coil.compose.AsyncImage
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileCard(
     name: String,
     photoUrl: String?,
+    cupAmount: Int, // ✅ Tambahkan parameter ini
     onProfileClick: () -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onProfileClick() }
-        // Menghapus padding agar menempel di tepi sesuai layout HomeScreen
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onProfileClick
     ) {
-        // Kolom untuk teks sambutan dan nama pengguna
-        Column(
-            modifier = Modifier.weight(1f) // Memberi sisa ruang untuk gambar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Selamat Datang,",
-                style = MaterialTheme.typography.bodyLarge // Teks sedikit lebih besar
-            )
-            Text(
-                // Menambahkan "!" agar sesuai desain
-                text = "$name!",
-                // Style dibuat lebih besar dan tebal sesuai desain
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // Gambar profil dari URL atau default jika tidak ada
-        val imageModifier = Modifier
-            .size(60.dp) // Ukuran gambar disesuaikan agar pas
-            .clip(CircleShape)
-
-        if (!photoUrl.isNullOrEmpty()) {
             AsyncImage(
                 model = photoUrl,
                 contentDescription = "Foto Profil",
-                contentScale = ContentScale.Crop, // Memastikan gambar mengisi lingkaran
-                modifier = imageModifier
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
-        } else {
-            Image(
-                painter = painterResource(id = R.drawable.ic_profile_info), // Pastikan drawable ini ada
-                contentDescription = "Foto Profil Default",
-                modifier = imageModifier
-            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(
+                modifier = Modifier.weight(1f) // Kolom ini akan mengisi sisa ruang
+            ) {
+                Text(
+                    text = "Selamat Datang 👋",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // ✅ Tampilkan jumlah panen di sini
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.WorkspacePremium,
+                    contentDescription = "Total Panen",
+                    tint = Color(0xFFD4AF37), // Warna Emas
+                    modifier = Modifier.size(32.dp)
+                )
+                Text(
+                    text = cupAmount.toString(),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

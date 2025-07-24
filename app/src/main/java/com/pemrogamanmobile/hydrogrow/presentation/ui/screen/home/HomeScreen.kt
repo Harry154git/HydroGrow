@@ -1,6 +1,5 @@
 package com.pemrogamanmobile.hydrogrow.presentation.ui.screen.home
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -26,23 +25,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.pemrogamanmobile.hydrogrow.presentation.ui.components.HydroponicCard
-import com.pemrogamanmobile.hydrogrow.presentation.ui.components.ProfileCard
+import com.pemrogamanmobile.hydrogrow.presentation.ui.components.ProfileCard // Pastikan impor ini ada
 import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.home.HomeViewModel
 
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     navigateToMakeGardenInput: () -> Unit,
-    // ✅ Tambahkan parameter navigasi baru untuk opsi AI
     navigateToAIAssistedGarden: () -> Unit,
-    navigateToGarden: (String) -> Unit,
-    navigateToPlant: (String) -> Unit,
-    navigateToAddPlant: () -> Unit
+    navigateToGarden: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // ✅ State untuk mengontrol visibilitas dialog
     var showAddOptionsDialog by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner) {
@@ -57,14 +52,11 @@ fun HomeScreen(
         }
     }
 
-    // ✅ Bungkus dengan Box untuk menampung layar utama dan dialog
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            // ✅ Terapkan efek blur jika dialog aktif
             modifier = Modifier.blur(radius = if (showAddOptionsDialog) 8.dp else 0.dp),
             floatingActionButton = {
                 FloatingActionButton(
-                    // ✅ Tampilkan dialog saat FAB diklik
                     onClick = { showAddOptionsDialog = true },
                 ) {
                     Icon(
@@ -87,19 +79,23 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(paddingValues)
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    contentPadding = PaddingValues(top = 20.dp, bottom = 20.dp) // Beri padding atas
                 ) {
                     item {
                         uiState.user?.let { user ->
+                            // ✅ MODIFIKASI PEMANGGILAN ProfileCard
                             ProfileCard(
                                 name = user.name ?: "Pengguna",
                                 photoUrl = user.photoUrl,
+                                cupAmount = uiState.cupAmount, // Teruskan data panen
                                 onProfileClick = { viewModel.logViewProfile() }
                             )
                         }
                     }
 
                     item {
+                        // ✅ KEMBALIKAN BAGIAN INI KE BENTUK SEMULA
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "Kebunmu",
@@ -155,7 +151,6 @@ fun HomeScreen(
             }
         }
 
-        // ✅ Tampilkan dialog jika state true
         if (showAddOptionsDialog) {
             AddGardenOptionsDialog(
                 onDismiss = { showAddOptionsDialog = false },
@@ -173,7 +168,6 @@ fun HomeScreen(
 }
 
 
-// ✅ COMPOSABLE BARU UNTUK DIALOG OPSI TAMBAH KEBUN
 @Composable
 fun AddGardenOptionsDialog(
     onDismiss: () -> Unit,
@@ -211,7 +205,6 @@ fun AddGardenOptionsDialog(
     }
 }
 
-// ✅ COMPOSABLE BARU UNTUK TOMBOL PILIHAN
 @Composable
 fun ChoiceButton(
     text: String,
@@ -224,7 +217,7 @@ fun ChoiceButton(
         shape = CircleShape,
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFD0F0C0).copy(alpha = 0.95f), // Warna hijau muda
+            containerColor = Color(0xFFD0F0C0).copy(alpha = 0.95f),
             contentColor = Color.Black
         )
     ) {

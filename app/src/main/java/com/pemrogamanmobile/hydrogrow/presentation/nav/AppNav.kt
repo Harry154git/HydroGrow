@@ -84,12 +84,9 @@ fun AppNav() {
                 // --- Rute Utama dengan Bottom Bar ---
                 composable(BottomNavItem.Home.route) {
                     HomeScreen(
-
-                        navigateToMakeGardenInput = { navController.navigate("make_garden_manual") }, // Alur Manual
-                        navigateToAIAssistedGarden = { navController.navigate("make_garden_input") }, // Alur AI
-                        navigateToGarden = { gardenId -> navController.navigate("garden_screen/$gardenId") },
-                        navigateToPlant = { plantId -> navController.navigate("plant_screen/$plantId") },
-                        navigateToAddPlant = { navController.navigate("add_plant") }
+                        navigateToMakeGardenInput = { navController.navigate("make_garden_manual") },
+                        navigateToAIAssistedGarden = { navController.navigate("make_garden_input") },
+                        navigateToGarden = { gardenId -> navController.navigate("garden_screen/$gardenId") }
                     )
                 }
 
