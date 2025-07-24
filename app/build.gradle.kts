@@ -24,15 +24,26 @@ android {
         applicationId = "com.pemrogamanmobile.hydrogrow"
         minSdk = 26
         targetSdk = 35
-        versionCode = 24072506
-        versionName = "1.3.0.4"
+        versionCode = 24072507
+        versionName = "1.3.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
 
+    signingConfigs {
+        // Menggunakan create() untuk mendefinisikan signing config
+        create("release") {
+            storeFile = file("C:/Users/ACER/Documents/projek/New folder/Hydro-Grow.jks")
+            storePassword = "yes5857"
+            keyAlias = "hydrogrow-key"
+            keyPassword = "yes5857"
+        }
     }
 
     buildTypes {
-        release {
+        // Menggunakan getByName() untuk mengkonfigurasi build type yang sudah ada
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -62,14 +73,14 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.foundation.android) // Cukup satu kali
+    implementation(libs.androidx.foundation.android)
     implementation(libs.coil.compose)
 
     // Navigation
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.androidx.navigation.compose.android)
 
-    // Firebase (BoM di atas)
+    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
@@ -77,7 +88,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
 
-    // Google Sign-In -> WAJIB DITAMBAHKAN
+    // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
@@ -85,26 +96,24 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
-    // Dependency Injection - Hilt (menggunakan KSP)
+    // Dependency Injection - Hilt
     implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler) // <-- DIUBAH dari kapt
+    ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.hilt.work)
-
-    // ==> TAMBAHKAN BARIS INI: Compiler untuk Hilt-Work
     ksp("androidx.hilt:hilt-compiler:1.2.0")
 
-    // Local Storage - Room (menggunakan KSP) & DataStore
+    // Local Storage - Room & DataStore
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler) // <-- DIUBAH dari kapt
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
 
     // Networking & JSON
     implementation(libs.retrofit)
     implementation(libs.okhttp)
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    implementation(libs.kotlinx.serialization.json) // Cukup satu kali
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit2.kotlinx.serialization.converter)
     implementation(libs.converter.gson)
 
@@ -127,5 +136,4 @@ dependencies {
     implementation(libs.firebase.messaging.ktx)
 
     implementation("androidx.compose.material:material-icons-extended-android:1.6.8")
-
 }

@@ -4,6 +4,7 @@ import android.net.Uri
 import com.pemrogamanmobile.hydrogrow.data.remote.service.firestore.ImageUploader
 import com.pemrogamanmobile.hydrogrow.domain.model.ChatBot
 import com.pemrogamanmobile.hydrogrow.domain.model.ChatMessage
+import com.pemrogamanmobile.hydrogrow.domain.model.OnboardingPreferences
 import com.pemrogamanmobile.hydrogrow.domain.repository.*
 import com.pemrogamanmobile.hydrogrow.util.Resource
 import kotlinx.coroutines.flow.*
@@ -17,7 +18,8 @@ class ChatBotUseCase @Inject constructor(
     private val gardenRepository: GardenRepository,
     private val plantRepository: PlantRepository,
     private val authRepository: AuthRepository,
-    private val imageUploader: ImageUploader
+    private val imageUploader: ImageUploader,
+    private val onboardingRepository: OnboardingRepository // [DIUBAH] Menambahkan repository onboarding
 ) {
 
     fun getChatHistory(): Flow<List<ChatBot>> {
@@ -32,38 +34,28 @@ class ChatBotUseCase @Inject constructor(
         return chatRepository.getChatById(chatbotid)
     }
 
-    // ✅ FIX: Fungsi dirombak untuk menangani re-identifikasi gambar
     fun continueConversation(chatbotid: String, message: ChatMessage, imageFile: File?): Flow<Resource<Unit>> = flow {
         emit(Resource.Loading())
 
-        // 1. Jika ada gambar, unggah terlebih dahulu untuk mendapatkan URL
-        // DIUBAH: Dapatkan user ID terlebih dahulu.
-        // Jika user tidak login saat mengirim gambar, proses akan gagal, ini bagus untuk keamanan.
         val currentUser = authRepository.getSignedInUser()
             ?: throw SecurityException("Pengguna tidak terautentikasi untuk melanjutkan percakapan.")
 
-        // 1. Jika ada gambar, unggah terlebih dahulu untuk mendapatkan URL
         val imageUrl = if (imageFile != null) {
-            // DIUBAH: Sertakan currentUser.uid saat memanggil imageUploader
             imageUploader.uploadImageToStorage(imageFile.toUri(), "chatbot_images", currentUser.uid)
         } else {
             null
         }
 
-        // 2. Buat pesan pengguna yang final dengan imageUrl jika ada
         val finalUserMessage = message.copy(imageUrl = imageUrl)
 
-        // 3. Tambahkan pesan pengguna ke percakapan
         val addUserMessageResult = chatRepository.addMessageToChat(chatbotid, finalUserMessage, null)
         if (addUserMessageResult is Resource.Error) {
             emit(addUserMessageResult)
             return@flow
         }
 
-        // 4. Buat prompt untuk Gemini.
         val prompt: String
         if (imageFile != null) {
-            // Jika ada gambar baru, identifikasi lagi!
             val plantInfoList = aiRepository.identifyPlant(imageFile, "auto").getOrThrow()
             val topPlant = plantInfoList.firstOrNull()
 
@@ -82,15 +74,12 @@ class ChatBotUseCase @Inject constructor(
                 prompt = "Pengguna mengirim gambar yang tidak dapat diidentifikasi. Jawab pertanyaan pengguna: \"${message.content}\""
             }
         } else {
-            // Jika hanya teks, gunakan histori sebelumnya
             val chatResource = chatRepository.getChatById(chatbotid).first { it !is Resource.Loading }
             val chat = (chatResource as? Resource.Success)?.data
                 ?: throw IllegalStateException("Gagal memuat data percakapan.")
-            // Membuat prompt lebih sederhana untuk menghindari token limit
             prompt = "Konteks riwayat percakapan sudah diberikan. Jawab pertanyaan terakhir dari pengguna: \"${message.content}\""
         }
 
-        // 5. Dapatkan respons dari Gemini dan simpan
         val responseText = aiRepository.getAiAnalysis(prompt).getOrThrow()
         val aiMessage = ChatMessage(role = "model", content = responseText, timestamp = System.currentTimeMillis())
         val addAiMessageResult = chatRepository.addMessageToChat(chatbotid, aiMessage, null)
@@ -103,9 +92,21 @@ class ChatBotUseCase @Inject constructor(
     fun startNewConversation(text: String): Flow<Resource<String>> = flow {
         emit(Resource.Loading())
         val currentUser = authRepository.getSignedInUser() ?: throw SecurityException("Pengguna tidak terautentikasi.")
-        val responseText = aiRepository.getAiAnalysis(text).getOrThrow()
 
-        // ✅ FIX: Prompt judul yang lebih baik
+        // [DIUBAH] Ambil preferensi user dan bangun prompt dengan konteks pengguna
+        val preferences = onboardingRepository.getOnboardingPreferences(currentUser.uid).first()
+        val userContextPrompt = if (preferences != null) {
+            "Anda berbicara dengan pengguna yang memiliki pengalaman '${preferences.experience}' dan ketersediaan waktu '${preferences.timeAvailable}'. Sesuaikan jawaban Anda dengan konteks ini."
+        } else ""
+
+        val finalPrompt = """
+            $userContextPrompt
+            
+            Jawab pertanyaan pengguna berikut: "$text"
+        """.trimIndent()
+
+        val responseText = aiRepository.getAiAnalysis(finalPrompt).getOrThrow()
+
         val titlePrompt = """
             Tugas: Berikan satu judul yang sangat singkat (3-5 kata) untuk sebuah percakapan. Jangan tambahkan tanda kutip atau kata pengantar.
             CONTOH:
@@ -140,18 +141,29 @@ class ChatBotUseCase @Inject constructor(
     fun startNewConversationWithImageDetection(text: String, imageFile: File): Flow<Resource<String>> = flow {
         emit(Resource.Loading())
         val currentUser = authRepository.getSignedInUser() ?: throw SecurityException("Pengguna tidak terautentikasi.")
+
+        // [DIUBAH] Ambil preferensi user
+        val preferences = onboardingRepository.getOnboardingPreferences(currentUser.uid).first()
+
         val plantInfoList = aiRepository.identifyPlant(imageFile, "auto").getOrThrow()
         if (plantInfoList.isEmpty()) {
             throw IllegalStateException("Maaf, saya tidak dapat mengidentifikasi tanaman pada gambar tersebut.")
         }
         val topPlant = plantInfoList.first()
+
+        val userContextPrompt = if (preferences != null) {
+            "Konteks Pengguna: Pengguna memiliki pengalaman '${preferences.experience}' dan ketersediaan waktu '${preferences.timeAvailable}'."
+        } else ""
+
         val combinedPrompt = """
             Anda adalah HydroGrow AI, seorang asisten ahli hidroponik.
-            Sebuah gambar telah dianalisis oleh sistem identifikasi tanaman dan hasilnya adalah:
+            $userContextPrompt
+            
+            Sebuah gambar telah dianalisis dan hasilnya adalah:
             - Nama Umum: ${topPlant.commonName}
             - Nama Ilmiah: ${topPlant.scientificName}
-            - Tingkat Keyakinan: ${(topPlant.score * 100).toInt()}%
-            Sekarang, jawab pertanyaan pengguna berikut yang berkaitan dengan tanaman ini. Berikan jawaban yang informatif dan relevan dengan hidroponik jika memungkinkan.
+            
+            Sekarang, jawab pertanyaan pengguna berikut terkait tanaman ini dengan mempertimbangkan konteks pengguna.
             Pertanyaan Pengguna: "$text"
         """.trimIndent()
         val geminiResponse = aiRepository.getAiAnalysis(combinedPrompt).getOrThrow()
@@ -159,7 +171,6 @@ class ChatBotUseCase @Inject constructor(
         val userMessage = ChatMessage(role = "user", content = text, imageUrl = imageUrl)
         val aiMessage = ChatMessage(role = "model", content = geminiResponse)
 
-        // ✅ FIX: Prompt judul yang lebih baik
         val titlePrompt = """
             Tugas: Berikan satu judul yang sangat singkat (3-5 kata) untuk sebuah percakapan. Jangan tambahkan tanda kutip atau kata pengantar.
             CONTOH:
@@ -192,14 +203,17 @@ class ChatBotUseCase @Inject constructor(
     fun startNewConversationWithChosenData(text: String, id: String, contextType: String): Flow<Resource<String>> = flow {
         emit(Resource.Loading())
         val currentUser = authRepository.getSignedInUser() ?: throw SecurityException("Pengguna tidak terautentikasi.")
+
+        // [DIUBAH] Ambil preferensi user untuk diteruskan ke pembuat prompt
+        val preferences = onboardingRepository.getOnboardingPreferences(currentUser.uid).first()
+
         val prompt = when (contextType.lowercase()) {
-            "garden" -> buildGardenPrompt(id, text)
-            "plant" -> buildPlantPrompt(id, text)
+            "garden" -> buildGardenPrompt(id, text, preferences)
+            "plant" -> buildPlantPrompt(id, text, preferences)
             else -> Result.failure(IllegalArgumentException("Tipe konteks tidak valid: $contextType"))
         }.getOrThrow()
         val responseText = aiRepository.getAiAnalysis(prompt).getOrThrow()
 
-        // ✅ FIX: Prompt judul yang lebih baik
         val titlePrompt = """
             Tugas: Berikan satu judul yang sangat singkat (3-5 kata) untuk sebuah percakapan. Jangan tambahkan tanda kutip atau kata pengantar.
             CONTOH:
@@ -231,29 +245,39 @@ class ChatBotUseCase @Inject constructor(
         emit(Resource.Error("Gagal memulai percakapan dengan data pilihan: ${e.message}"))
     }
 
-
-    private suspend fun buildGardenPrompt(id: String, userQuestion: String): Result<String> {
+    // [DIUBAH] Menambahkan parameter OnboardingPreferences
+    private suspend fun buildGardenPrompt(id: String, userQuestion: String, preferences: OnboardingPreferences?): Result<String> {
         val garden = gardenRepository.getGardenById(id)
         return if (garden != null) {
+            val userContextPrompt = if (preferences != null) {
+                "Konteks Pengguna: Pengguna memiliki pengalaman '${preferences.experience}'."
+            } else ""
+
             val prompt = """
-            Konteks: Pengguna bertanya tentang taman hidroponik mereka yang bernama "${garden.gardenName}".
-            Detail Taman: Tipe hidroponik ${garden.hydroponicType} dengan ukuran ${garden.gardenSize} meter persegi.
+            $userContextPrompt
+            Konteks Taman: Pengguna bertanya tentang taman hidroponik mereka "${garden.gardenName}" dengan tipe ${garden.hydroponicType}.
             Pertanyaan Pengguna: "$userQuestion"
-            Jawab pertanyaan tersebut berdasarkan konteks taman yang diberikan.
+            Jawab pertanyaan tersebut berdasarkan konteks pengguna dan taman yang diberikan.
             """.trimIndent()
             Result.success(prompt)
         } else {
             Result.failure(Exception("Data taman dengan ID $id tidak ditemukan."))
         }
     }
-    private suspend fun buildPlantPrompt(id: String, userQuestion: String): Result<String> {
+
+    // [DIUBAH] Menambahkan parameter OnboardingPreferences
+    private suspend fun buildPlantPrompt(id: String, userQuestion: String, preferences: OnboardingPreferences?): Result<String> {
         val plant = plantRepository.getPlantById(id).firstOrNull()
         return if (plant != null) {
+            val userContextPrompt = if (preferences != null) {
+                "Konteks Pengguna: Pengguna memiliki pengalaman '${preferences.experience}'."
+            } else ""
+
             val prompt = """
-            Konteks: Pengguna bertanya tentang tanaman mereka yaitu "${plant.plantName}".
-            Informasi Tanaman: Perkiraan waktu panen untuk tanaman ini adalah ${plant.harvestTime}.
+            $userContextPrompt
+            Konteks Tanaman: Pengguna bertanya tentang tanaman "${plant.plantName}" dengan perkiraan panen ${plant.harvestTime}.
             Pertanyaan Pengguna: "$userQuestion"
-            Jawab pertanyaan tersebut berdasarkan konteks tanaman yang diberikan.
+            Jawab pertanyaan tersebut berdasarkan konteks pengguna dan tanaman yang diberikan.
             """.trimIndent()
             Result.success(prompt)
         } else {

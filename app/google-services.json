@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "838621209796-4s6vdgho26nh6f11o1jnqdm02h1r4t3p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pemrogamanmobile.hydrogrow",
+            "certificate_hash": "be339227224bba13514518b217873efed4688ffd"
+          }
+        },
+        {
           "client_id": "838621209796-qqcs1imj5ujp9j3hcq1aru4tb1kb7pmi.apps.googleusercontent.com",
           "client_type": 3
         }

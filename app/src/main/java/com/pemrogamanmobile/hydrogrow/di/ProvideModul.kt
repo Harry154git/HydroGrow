@@ -1,5 +1,3 @@
-// File: di/ProvideModule.kt
-
 package com.pemrogamanmobile.hydrogrow.di
 
 import android.app.Application
@@ -32,7 +30,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object ProvideModule {
 
-    // ... (provider untuk Database, DAO, Firebase, dll. tetap sama) ...
     @Provides
     @Singleton
     fun provideDatabase(app: Application): AppDatabase {

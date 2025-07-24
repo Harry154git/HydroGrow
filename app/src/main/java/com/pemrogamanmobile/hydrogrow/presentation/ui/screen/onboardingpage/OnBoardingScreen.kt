@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.collectLatest
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnBoardingScreen(
-    navController: NavController,
+    onOnboardingComplete: () -> Unit,
     viewModel: OnboardingScreenViewModel = hiltViewModel()
 ) {
     val pagerState = rememberPagerState(pageCount = { 7 })
@@ -26,12 +26,8 @@ fun OnBoardingScreen(
     LaunchedEffect(key1 = true) {
         viewModel.eventFlow.collectLatest { event ->
             when (event) {
-                is OnboardingScreenViewModel.UiEvent.NavigateToCreateGardenAi -> {
-                    // Ganti "create_garden_ai_route" dengan route tujuan Anda
-                    navController.navigate("create_garden_ai_route") {
-                        // Hapus backstack agar user tidak bisa kembali ke onboarding
-                        popUpTo("onboarding_route") { inclusive = true }
-                    }
+                is OnboardingScreenViewModel.UiEvent.NavigateToHome -> {
+                    onOnboardingComplete() // Panggil callback saat event diterima
                 }
             }
         }
@@ -41,17 +37,17 @@ fun OnBoardingScreen(
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
-            userScrollEnabled = false // Menonaktifkan scroll manual
+            userScrollEnabled = false
         ) { page ->
-//            when (page) {
-//                0 -> OnboardingPage1(pagerState = pagerState)
-//                1 -> OnboardingPage2(pagerState = pagerState)
-//                2 -> OnboardingPage3(pagerState = pagerState)
-//                3 -> OnboardingPage4(pagerState = pagerState, viewModel = viewModel)
-//                4 -> OnboardingPage5(pagerState = pagerState, viewModel = viewModel)
-//                5 -> OnboardingPage6(pagerState = pagerState, viewModel = viewModel)
-//                6 -> OnboardingPage7(viewModel = viewModel)
-//            }
+            when (page) {
+                0 -> OnboardingPage1(pagerState = pagerState)
+                1 -> OnboardingPage2(pagerState = pagerState)
+                2 -> OnboardingPage3(pagerState = pagerState)
+                3 -> OnboardingPage4(pagerState = pagerState, viewModel = viewModel)
+                4 -> OnboardingPage5(pagerState = pagerState, viewModel = viewModel)
+                5 -> OnboardingPage6(pagerState = pagerState, viewModel = viewModel)
+                6 -> OnboardingPage7(viewModel = viewModel)
+            }
         }
     }
 }

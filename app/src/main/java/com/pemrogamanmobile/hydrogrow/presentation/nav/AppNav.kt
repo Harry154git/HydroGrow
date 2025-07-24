@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,19 +37,29 @@ import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.profilpage.ProfileV
 fun AppNav() {
     val navController: NavHostController = rememberNavController()
     val appNavViewModel: AppNavViewModel = hiltViewModel()
-    val appState = appNavViewModel.appState.collectAsStateWithLifecycle()
+    val appState by appNavViewModel.appState.collectAsStateWithLifecycle()
 
     val chatbotRoute = "chatbot_screen"
 
-    if (appState.value.isLoading) {
+    if (appState.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
     } else {
-        val startDestination = when {
-            //appState.value.isSignedIn -> BottomNavItem.Home.route
-            //appState.value.isOnboardingCompleted -> "login"
-            else -> "login"//"onboarding"
+        // Alur baru: Jika belum login, selalu mulai dari "login".
+        // Jika sudah login, cek status onboarding nanti.
+        val startDestination = if (appState.isSignedIn) BottomNavItem.Home.route else "login"
+
+        // Cek jika pengguna sudah login tapi belum onboarding, arahkan ke onboarding.
+        LaunchedEffect(appState.isSignedIn, appState.isOnboardingCompleted) {
+            if (appState.isSignedIn && !appState.isOnboardingCompleted) {
+                // Pastikan kita tidak sedang di onboarding untuk menghindari loop
+                if (navController.currentDestination?.route != "onboarding") {
+                    navController.navigate("onboarding") {
+                        popUpTo(BottomNavItem.Home.route) { inclusive = true }
+                    }
+                }
+            }
         }
 
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -71,17 +82,25 @@ fun AppNav() {
             ) {
                 // --- Rute tanpa Bottom Bar ---
                 composable("onboarding") {
-//                    OnBoardingScreen(onNavigateToLogin = {
-//                        navController.navigate("login") { popUpTo("onboarding") { inclusive = true } }
-//                    })
-                }
-                composable("login") {
-                    LoginScreen(onLoginSuccess = {
-                        navController.navigate(BottomNavItem.Home.route) { popUpTo("login") { inclusive = true } }
+                    OnBoardingScreen(onOnboardingComplete = {
+                        navController.navigate(BottomNavItem.Home.route) {
+                            popUpTo("onboarding") { inclusive = true }
+                        }
                     })
                 }
 
-                // --- Rute Utama dengan Bottom Bar ---
+                composable("login") {
+                    LoginScreen(onLoginSuccess = {
+                        // Setelah login, status akan diperbarui oleh AppNavViewModel.
+                        // LaunchedEffect di atas akan menangani navigasi ke onboarding jika perlu,
+                        // atau NavHost akan tetap di Home jika sudah onboarding.
+                        navController.navigate(BottomNavItem.Home.route) {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    })
+                }
+
+                // --- Rute Utama dengan Bottom Bar (sisanya tetap sama) ---
                 composable(BottomNavItem.Home.route) {
                     HomeScreen(
                         navigateToMakeGardenInput = { navController.navigate("make_garden_manual") },
@@ -102,7 +121,6 @@ fun AppNav() {
                     )
                 }
 
-                // --- Rute untuk ChatBotScreen ---
                 composable(
                     route = "$chatbotRoute?chatbotId={chatbotId}",
                     arguments = listOf(navArgument("chatbotId") {
@@ -117,7 +135,6 @@ fun AppNav() {
                     )
                 }
 
-                // ✅ Rute baru untuk membuat kebun secara manual (tanpa AI)
                 composable("make_garden_manual") {
                     MakeGardenScreen(navController = navController)
                 }
