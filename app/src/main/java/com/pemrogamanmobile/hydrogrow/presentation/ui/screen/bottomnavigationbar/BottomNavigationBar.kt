@@ -23,9 +23,7 @@ fun BottomNavigationBar(navController: NavController) {
     // Daftar item yang akan ditampilkan
     val items = listOf(
         BottomNavItem.Home,
-        BottomNavItem.Community,
         BottomNavItem.Chatbot,
-        BottomNavItem.Postings,
         BottomNavItem.Profil,
     )
 

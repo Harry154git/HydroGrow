@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -94,15 +93,6 @@ fun AppNav() {
                     )
                 }
 
-                composable(BottomNavItem.Community.route) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Halaman Komunitas")
-                    }
-                }
-
-                composable(BottomNavItem.Postings.route) {
-                    // Konten untuk Postings
-                }
 
                 composable(BottomNavItem.Profil.route) {
                     val viewModel: ProfileViewModel = hiltViewModel()
@@ -129,8 +119,6 @@ fun AppNav() {
                         chatbotId = chatbotId
                     )
                 }
-
-                // --- Rute Lainnya ---
 
                 // ✅ Rute baru untuk membuat kebun secara manual (tanpa AI)
                 composable("make_garden_manual") {

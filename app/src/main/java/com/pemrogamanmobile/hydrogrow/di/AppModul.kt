@@ -34,11 +34,6 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindPostingRepository(impl: PostingRepositoryImpl): PostingRepository
-
-    // --- TAMBAHKAN DUA BLOK INI ---
-    @Binds
-    @Singleton
     abstract fun bindGameRepository(impl: GameRepositoryImpl): GameRepository
 
     @Binds

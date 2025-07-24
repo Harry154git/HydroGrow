@@ -76,10 +76,6 @@ object ProvideModule {
 
     @Provides
     @Singleton
-    fun providePostingService(db: FirebaseFirestore): PostingService = PostingService(db)
-
-    @Provides
-    @Singleton
     fun provideGameService(db: FirebaseFirestore): GameService = GameService(db)
 
     @Provides
