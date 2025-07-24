@@ -6,6 +6,7 @@ import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.pemrogamanmobile.hydrogrow.data.local.datastore.PreferenceManager
 import com.pemrogamanmobile.hydrogrow.data.local.room.AppDatabase
@@ -62,13 +63,23 @@ object ProvideModule {
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
+
     @Provides
     @Singleton
     fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
 
+    // TAMBAHKAN BLOK INI
     @Provides
     @Singleton
-    fun provideAuthService(auth: FirebaseAuth): AuthService = AuthService(auth)
+    fun provideCrashlytics(): FirebaseCrashlytics = FirebaseCrashlytics.getInstance()
+    // -------------------
+
+    @Provides
+    @Singleton
+    fun provideAuthService(
+        auth: FirebaseAuth,
+        crashlytics: FirebaseCrashlytics // <-- Tambahkan parameter ini
+    ): AuthService = AuthService(auth, crashlytics) // <-- Lewatkan ke konstruktor
 
     @Provides
     @Singleton

@@ -71,9 +71,9 @@ fun AppNav() {
             ) {
                 // --- Rute tanpa Bottom Bar ---
                 composable("onboarding") {
-                    OnBoardingScreen(onNavigateToLogin = {
-                        navController.navigate("login") { popUpTo("onboarding") { inclusive = true } }
-                    })
+//                    OnBoardingScreen(onNavigateToLogin = {
+//                        navController.navigate("login") { popUpTo("onboarding") { inclusive = true } }
+//                    })
                 }
                 composable("login") {
                     LoginScreen(onLoginSuccess = {
