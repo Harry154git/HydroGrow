@@ -23,8 +23,8 @@ import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.chatbotpage.ChatBot
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.bottomnavigationbar.BottomNavigationBar
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.home.HomeScreen
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage.*
-import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage.makegarden.withai.MakeGardenInput
-import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage.makegarden.withai.MakeGardenOutput
+import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage.makegarden.withnoai.MakeGardenScreen
+import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.hydroponicpage.makegarden.withai.MakeGardenAIScreen
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.loginpage.LoginScreen
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.onboardingpage.OnBoardingScreen
 import com.pemrogamanmobile.hydrogrow.presentation.ui.screen.plantpage.AddPlantScreen
@@ -39,7 +39,6 @@ fun AppNav() {
     val appNavViewModel: AppNavViewModel = hiltViewModel()
     val appState = appNavViewModel.appState.collectAsStateWithLifecycle()
 
-    // Definisikan rute chatbot yang baru di sini agar konsisten
     val chatbotRoute = "chatbot_screen"
 
     if (appState.value.isLoading) {
@@ -86,7 +85,9 @@ fun AppNav() {
                 // --- Rute Utama dengan Bottom Bar ---
                 composable(BottomNavItem.Home.route) {
                     HomeScreen(
-                        navigateToMakeGardenInput = { navController.navigate("make_garden_input") },
+
+                        navigateToMakeGardenInput = { navController.navigate("make_garden_manual") }, // Alur Manual
+                        navigateToAIAssistedGarden = { navController.navigate("make_garden_input") }, // Alur AI
                         navigateToGarden = { gardenId -> navController.navigate("garden_screen/$gardenId") },
                         navigateToPlant = { plantId -> navController.navigate("plant_screen/$plantId") },
                         navigateToAddPlant = { navController.navigate("add_plant") }
@@ -100,7 +101,7 @@ fun AppNav() {
                 }
 
                 composable(BottomNavItem.Postings.route) {
-                    // Konten untuk Postings, jika ada, diletakkan di sini
+                    // Konten untuk Postings
                 }
 
                 composable(BottomNavItem.Profil.route) {
@@ -114,33 +115,34 @@ fun AppNav() {
                     )
                 }
 
-                // --- Rute untuk ChatBotScreen yang bisa menerima ID ---
+                // --- Rute untuk ChatBotScreen ---
                 composable(
                     route = "$chatbotRoute?chatbotId={chatbotId}",
                     arguments = listOf(navArgument("chatbotId") {
                         type = NavType.StringType
-                        nullable = true // Penting! Agar argumen bersifat opsional
+                        nullable = true
                     })
                 ) { backStackEntry ->
                     val chatbotId = backStackEntry.arguments?.getString("chatbotId")
                     ChatBotScreen(
                         navController = navController,
-                        chatbotId = chatbotId // Teruskan ID ke screen
+                        chatbotId = chatbotId
                     )
                 }
 
-                // --- Rute Lainnya (yang tetap menampilkan Bottom Bar) ---
+                // --- Rute Lainnya ---
+
+                // ✅ Rute baru untuk membuat kebun secara manual (tanpa AI)
+                composable("make_garden_manual") {
+                    MakeGardenScreen(navController = navController)
+                }
+
                 composable("edit_garden/{gardenId}") { backStackEntry ->
                     val gardenId = backStackEntry.arguments?.getString("gardenId") ?: ""
                     EditGardenScreen(gardenId = gardenId, navController = navController, viewModel = hiltViewModel())
                 }
                 composable("make_garden_input") {
-                    MakeGardenInput(onNext = { navController.navigate("make_garden_output") })
-                }
-                composable("make_garden_output") {
-                    MakeGardenOutput(onBackToHome = {
-                        navController.navigate(BottomNavItem.Home.route) { popUpTo(BottomNavItem.Home.route) { inclusive = true } }
-                    })
+                    MakeGardenAIScreen(navController = navController)
                 }
                 composable("garden_screen/{gardenId}") { backStackEntry ->
                     val gardenId = backStackEntry.arguments?.getString("gardenId") ?: ""

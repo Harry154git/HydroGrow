@@ -33,7 +33,7 @@ class PostingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun uploadPostingImage(uri: Uri): String {
-        return imageUploader.uploadImageToStorage(uri, "postings")
+        return imageUploader.uploadImageToStorage(uri, "postings", getUserId())
     }
 
     // --- Operasi CRUD Postingan ---

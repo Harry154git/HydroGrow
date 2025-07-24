@@ -17,8 +17,8 @@ android {
         applicationId = "com.pemrogamanmobile.hydrogrow"
         minSdk = 26
         targetSdk = 35
-        versionCode = 23072504
-        versionName = "1.1.3.3"
+        versionCode = 24072501
+        versionName = "1.2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

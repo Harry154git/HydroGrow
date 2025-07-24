@@ -1,5 +1,6 @@
 package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.plantpage
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pemrogamanmobile.hydrogrow.domain.usecase.plant.PlantUseCase
@@ -12,16 +13,12 @@ import androidx.compose.runtime.setValue
 import com.pemrogamanmobile.hydrogrow.domain.model.Plant
 import kotlinx.coroutines.launch
 import java.util.UUID
-import com.pemrogamanmobile.hydrogrow.domain.usecase.auth.GetCurrentUserUseCase
 import com.pemrogamanmobile.hydrogrow.domain.usecase.garden.GardenUseCase
 
 @HiltViewModel
 class AddPlantViewModel @Inject constructor(
     private val plantUseCase: PlantUseCase,
-    private val gardenUseCase: GardenUseCase,
-    // userUseCase tetap di-inject jika diperlukan untuk fitur lain,
-    // namun tidak dipakai lagi di fungsi yang Anda sebutkan.
-    private val userUseCase: GetCurrentUserUseCase
+    private val gardenUseCase: GardenUseCase
 ) : ViewModel() {
 
     var uiState by mutableStateOf(AddPlantUiState())
@@ -33,16 +30,18 @@ class AddPlantViewModel @Inject constructor(
 
     private fun getAllGardens() {
         viewModelScope.launch {
-            // ✅ DIPERBARUI: Tidak perlu get userId manual.
-            // Langsung panggil getAllGardens() dari use case.
             gardenUseCase.getAllGardens().collect { gardens ->
                 uiState = uiState.copy(
                     availableGardens = gardens,
-                    // Set garden pertama sebagai default jika belum ada yang terpilih
                     selectedGardenId = uiState.selectedGardenId ?: gardens.firstOrNull()?.id
                 )
             }
         }
+    }
+
+    // ✅ DITAMBAHKAN: Fungsi untuk menangani URI gambar yang dipilih dari UI
+    fun onImageSelected(uri: Uri) {
+        uiState = uiState.copy(imageUri = uri)
     }
 
     fun onPlantNameChange(name: String) {
@@ -65,28 +64,38 @@ class AddPlantViewModel @Inject constructor(
 
     fun savePlant(onSuccess: () -> Unit, onError: (String) -> Unit) {
         val selectedGardenId = uiState.selectedGardenId
+        val imageUri = uiState.imageUri
+
+        // ✅ DIPERBARUI: Validasi sekarang juga mencakup pemilihan foto
         if (uiState.plantName.isBlank() || uiState.harvestTime.isBlank() || selectedGardenId.isNullOrBlank() || uiState.cupAmount.isBlank()) {
             onError("Semua field wajib diisi.")
             return
         }
+        if (imageUri == null) {
+            onError("Harap pilih foto tanaman.")
+            return
+        }
 
         viewModelScope.launch {
-            // ✅ DIPERBARUI: Tidak perlu get userId manual.
-
-            val newPlant = Plant(
-                id = UUID.randomUUID().toString(),
-                plantName = uiState.plantName,
-                harvestTime = uiState.harvestTime,
-                gardenOwnerId = selectedGardenId,
-                userOwnerId = "", // Dikosongkan, karena akan diisi oleh implementasi insertPlant
-                imageUrl = null,
-                plantingTime = System.currentTimeMillis(),
-                cupAmount = uiState.cupAmount.toIntOrNull() ?: 0
-            )
-
             try {
                 uiState = uiState.copy(isLoading = true)
-                // ✅ DIPERBARUI: Panggil insertPlant tanpa perlu mengambil userId di sini.
+
+                // 1. Unggah gambar dan dapatkan URL-nya
+                val imageUrl = plantUseCase.uploadPlantImage(imageUri)
+
+                // 2. Buat objek Plant dengan imageUrl yang didapat
+                val newPlant = Plant(
+                    id = UUID.randomUUID().toString(),
+                    plantName = uiState.plantName,
+                    harvestTime = uiState.harvestTime,
+                    gardenOwnerId = selectedGardenId,
+                    userOwnerId = "",
+                    imageUrl = imageUrl, // ✅ Gunakan URL dari hasil unggah
+                    plantingTime = System.currentTimeMillis(),
+                    cupAmount = uiState.cupAmount.toIntOrNull() ?: 0
+                )
+
+                // 3. Simpan data tanaman ke database
                 plantUseCase.insertPlant(newPlant)
                 onSuccess()
             } catch (e: Exception) {

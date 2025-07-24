@@ -30,6 +30,10 @@ class ChatBotRepositoryImpl @Inject constructor(
     private val imageUploader: ImageUploader
 ) : ChatBotRepository {
 
+    private fun getUserId(): String {
+        return authService.getCurrentUser()?.uid.orEmpty()
+    }
+
     // ✅ FIX: Menerapkan pola Single Source of Truth
     // Fungsi ini HANYA mengembalikan data dari database lokal sebagai satu-satunya sumber kebenaran.
     override fun getChatHistory(): Flow<List<ChatBot>> {
@@ -118,7 +122,7 @@ class ChatBotRepositoryImpl @Inject constructor(
             // FIX: Logika diubah untuk membuat satu ChatMessage yang utuh
             val finalMessage = if (imageUri != null) {
                 // 1. Upload gambar dan dapatkan URL-nya
-                val imageUrl = imageUploader.uploadImageToStorage(imageUri, "chatbot")
+                val imageUrl = imageUploader.uploadImageToStorage(imageUri, "chatbot", getUserId())
                 // 2. Salin pesan asli dan tambahkan imageUrl
                 message.copy(imageUrl = imageUrl)
             } else {

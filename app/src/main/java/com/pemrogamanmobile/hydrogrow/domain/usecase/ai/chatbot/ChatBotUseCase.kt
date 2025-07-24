@@ -37,8 +37,15 @@ class ChatBotUseCase @Inject constructor(
         emit(Resource.Loading())
 
         // 1. Jika ada gambar, unggah terlebih dahulu untuk mendapatkan URL
+        // DIUBAH: Dapatkan user ID terlebih dahulu.
+        // Jika user tidak login saat mengirim gambar, proses akan gagal, ini bagus untuk keamanan.
+        val currentUser = authRepository.getSignedInUser()
+            ?: throw SecurityException("Pengguna tidak terautentikasi untuk melanjutkan percakapan.")
+
+        // 1. Jika ada gambar, unggah terlebih dahulu untuk mendapatkan URL
         val imageUrl = if (imageFile != null) {
-            imageUploader.uploadImageToStorage(imageFile.toUri(), "chatbot_images")
+            // DIUBAH: Sertakan currentUser.uid saat memanggil imageUploader
+            imageUploader.uploadImageToStorage(imageFile.toUri(), "chatbot_images", currentUser.uid)
         } else {
             null
         }
@@ -148,7 +155,7 @@ class ChatBotUseCase @Inject constructor(
             Pertanyaan Pengguna: "$text"
         """.trimIndent()
         val geminiResponse = aiRepository.getAiAnalysis(combinedPrompt).getOrThrow()
-        val imageUrl = imageUploader.uploadImageToStorage(imageFile.toUri(), "chatbot_images")
+        val imageUrl = imageUploader.uploadImageToStorage(imageFile.toUri(), "chatbot_images", currentUser.uid)
         val userMessage = ChatMessage(role = "user", content = text, imageUrl = imageUrl)
         val aiMessage = ChatMessage(role = "model", content = geminiResponse)
 

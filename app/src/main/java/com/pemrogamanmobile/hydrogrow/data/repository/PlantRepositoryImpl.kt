@@ -32,7 +32,7 @@ class PlantRepositoryImpl @Inject constructor(
 
     override suspend fun uploadPlantImage(uri: Uri): String {
         // Sekarang kita tentukan folder penyimpanannya adalah "gardens"
-        return imageUploader.uploadImageToStorage(uri, "plants")
+        return imageUploader.uploadImageToStorage(uri, "plants", getUserId())
     }
 
     override suspend fun insertPlant(plant: Plant) {

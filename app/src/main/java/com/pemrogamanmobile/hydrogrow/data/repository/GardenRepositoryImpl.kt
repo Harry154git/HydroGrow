@@ -36,8 +36,7 @@ class GardenRepositoryImpl @Inject constructor(
     }
 
     override suspend fun uploadGardenImage(uri: Uri): String {
-        // Sekarang kita tentukan folder penyimpanannya adalah "gardens"
-        return imageUploader.uploadImageToStorage(uri, "gardens")
+        return imageUploader.uploadImageToStorage(uri, "gardens", getUserId())
     }
 
     override suspend fun updateGarden(garden: Garden) {

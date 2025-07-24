@@ -2,9 +2,10 @@ package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.plantpage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
+import com.pemrogamanmobile.hydrogrow.domain.model.Plant
 import com.pemrogamanmobile.hydrogrow.domain.usecase.plant.PlantUseCase
 import com.pemrogamanmobile.hydrogrow.presentation.uistate.PlantUiState
-// import com.pemrogamanmobile.hydrogrow.presentation.mapper.toUi // <-- Hapus import ini
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,12 +27,24 @@ class PlantViewModel @Inject constructor(
 
             plantUseCase.getPlantById(plantId).collect { plant ->
                 if (plant != null) {
-                    // ✅ Langsung gunakan objek 'plant' tanpa .toUi()
                     _uiState.value = PlantUiState.Success(plant)
                 } else {
                     _uiState.value = PlantUiState.Error("Tanaman tidak ditemukan")
                 }
             }
+        }
+    }
+
+    /**
+     * ✅ Fungsi baru untuk menjalankan use case konfirmasi panen.
+     * Setelah berhasil, akan kembali ke layar sebelumnya.
+     */
+    fun harvestPlant(plant: Plant, navController: NavController) {
+        viewModelScope.launch {
+            // Panggil use case untuk mengkonfirmasi panen
+            plantUseCase.confirmHarvest(plant, plant.gardenOwnerId)
+            // Kembali ke halaman sebelumnya setelah panen
+            navController.popBackStack()
         }
     }
 }

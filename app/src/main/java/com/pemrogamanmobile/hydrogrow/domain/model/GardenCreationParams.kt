@@ -2,12 +2,12 @@ package com.pemrogamanmobile.hydrogrow.domain.model
 
 data class GardenCreationParams(
     val kondisiCahaya: String,
-    val panjangLahan: Float?, // Nullable jika pengguna minta rekomendasi
-    val lebarLahan: Float?,   // Nullable jika pengguna minta rekomendasi
-    val mintaRekomendasiLahan: Boolean,
     val suhuCuaca: String,
-    val jenisTanaman: String,
-    val mintaRekomendasiTanaman: Boolean,
     val tujuanSkala: String,
-    val rentangBiaya: String
+    val rentangBiaya: String,
+    val mintaRekomendasiLahan: Boolean,
+    val panjangLahan: Int?,
+    val lebarLahan: Int?,
+    val mintaRekomendasiTanaman: Boolean,
+    val jenisTanaman: String?
 )

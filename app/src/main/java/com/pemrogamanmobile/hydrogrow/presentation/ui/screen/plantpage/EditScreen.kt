@@ -1,174 +1,231 @@
 package com.pemrogamanmobile.hydrogrow.presentation.ui.screen.plantpage
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.pemrogamanmobile.hydrogrow.R
 import com.pemrogamanmobile.hydrogrow.presentation.viewmodel.plantpage.EditPlantViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditScreen(
     viewModel: EditPlantViewModel = hiltViewModel(),
     navController: NavController,
     plantId: String
 ) {
-    val state by viewModel::uiState
-    var isEditing by rememberSaveable { mutableStateOf(false) }
+    val uiState by viewModel::uiState
     val context = LocalContext.current
 
-    // Local fields untuk menampung perubahan saat mode edit
-    var localPlantName by rememberSaveable { mutableStateOf("") }
-    var localHarvestTime by rememberSaveable { mutableStateOf("") }
-    var localCupAmount by rememberSaveable { mutableStateOf("") } // ✅ DITAMBAHKAN
+    // ✅ DITAMBAHKAN: Launcher untuk memilih gambar
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let { viewModel.onImageSelected(it) }
+        }
+    )
 
     LaunchedEffect(plantId) {
         viewModel.loadPlant(plantId)
     }
 
-    // ✅ DIPERBARUI: Inisialisasi local state saat data dari ViewModel pertama kali siap
-    LaunchedEffect(state.originalPlant) {
-        if (state.originalPlant != null) {
-            localPlantName = state.plantName
-            localHarvestTime = state.harvestTime
-            localCupAmount = state.cupAmount
-        }
-    }
-
-    // Navigasi kembali setelah sukses
-    LaunchedEffect(state.isSuccess) {
-        if (state.isSuccess) {
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
             Toast.makeText(context, "Operasi berhasil", Toast.LENGTH_SHORT).show()
-            navController.popBackStack()
+            navController.popBackStack(navController.graph.startDestinationId, false)
         }
     }
 
-    if (state.isLoading && state.originalPlant == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Edit Tanaman",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                    }
+                },
+                actions = {
+                    Spacer(modifier = Modifier.width(48.dp))
+                }
+            )
         }
-        return
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Edit Tanaman", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Button(onClick = { navController.popBackStack() }) {
-                Text("Kembali")
+    ) { paddingValues ->
+        if (uiState.isLoading && uiState.originalPlant == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
+            return@Scaffold
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        val plantName = uiState.plantName
+        val harvestTime = uiState.harvestTime
+        val cupAmount = uiState.cupAmount
+        val plantingTime = uiState.originalPlant?.plantingTime
 
-        AsyncImage(
-            model = state.originalPlant?.imageUrl,
-            contentDescription = "Tanaman",
+        val formattedPlantingTime = plantingTime?.let {
+            SimpleDateFormat("dd MMMM yyyy, HH:mm", Locale("id", "ID")).format(Date(it))
+        } ?: "Memuat..."
+
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp),
-            contentScale = ContentScale.Crop,
-            error = painterResource(id = R.drawable.ic_notification_logo) // placeholder
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        InfoRow("Nama Tanaman:", if (isEditing) localPlantName else state.plantName, isEditing) { localPlantName = it }
-        InfoRow("Masa Panen:", if (isEditing) localHarvestTime else state.harvestTime, isEditing) { localHarvestTime = it }
-        InfoRow("Jumlah Cup:", if (isEditing) localCupAmount else state.cupAmount, isEditing) { localCupAmount = it } // ✅ DITAMBAHKAN
-
-        // ✅ DIHAPUS - InfoRow untuk nutrisi
-        // InfoRow("Nutrisi:", if (isEditing) localNutrients else state.nutrientsUsed, isEditing) { localNutrients = it }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(onClick = {
-                if (!isEditing) {
-                    // Saat masuk mode edit, pastikan local state sinkron dengan state terbaru
-                    localPlantName = state.plantName
-                    localHarvestTime = state.harvestTime
-                    localCupAmount = state.cupAmount
-                }
-                isEditing = !isEditing
-            }) {
-                Text(if (isEditing) "Batal" else "Edit")
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ✅ DIPERBARUI: Tampilkan gambar baru atau gambar lama
+            AsyncImage(
+                model = uiState.newImageUri ?: uiState.originalPlant?.imageUrl,
+                contentDescription = "Foto Tanaman",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { imagePickerLauncher.launch("image/*") }, // Buat gambar bisa diklik
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.ic_notification_logo)
+            )
+
+            // ✅ DIPERBARUI: Tombol untuk meluncurkan pemilih gambar
+            TextButton(onClick = { imagePickerLauncher.launch("image/*") }) {
+                Text("Ubah Foto")
             }
 
-            if (isEditing) {
-                Button(onClick = {
-                    // Update state di ViewModel dengan nilai dari local state
-                    viewModel.onPlantNameChange(localPlantName)
-                    viewModel.onHarvestTimeChange(localHarvestTime)
-                    viewModel.onCupAmountChange(localCupAmount)
-                    viewModel.updatePlant()
-                    // Navigasi kembali akan ditangani oleh LaunchedEffect(state.isSuccess)
-                }) {
-                    Text("Simpan")
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Input fields tetap sama
+            EditTextField(
+                label = "Nama Tanaman",
+                value = plantName,
+                onValueChange = { viewModel.onPlantNameChange(it) }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            EditTextField(
+                label = "Waktu Menanam",
+                value = formattedPlantingTime,
+                onValueChange = {},
+                readOnly = true
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            EditTextField(
+                label = "Waktu Masa Panen (hari)",
+                value = harvestTime,
+                onValueChange = { viewModel.onHarvestTimeChange(it) },
+                keyboardType = KeyboardType.Number
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            EditTextField(
+                label = "Jumlah Cup",
+                value = cupAmount,
+                onValueChange = { viewModel.onCupAmountChange(it) },
+                keyboardType = KeyboardType.Number
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Tombol Aksi tetap sama
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Button(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC0C0C0))
+                ) {
+                    Text("Batal", color = Color.Black)
+                }
+                Button(
+                    onClick = { viewModel.updatePlant() },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B8E23))
+                ) {
+                    Text("Simpan", color = Color.White)
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = { viewModel.deletePlant() },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Hapus Tanaman", color = Color.White)
-        }
+            Button(
+                onClick = { viewModel.deletePlant() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B8E23))
+            ) {
+                Text("Hapus Tanaman", color = Color.White)
+            }
 
-        state.errorMessage?.let {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Error: $it", color = Color.Red)
+            uiState.errorMessage?.let {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Error: $it", color = MaterialTheme.colorScheme.error)
+            }
         }
     }
 }
 
 @Composable
-fun InfoRow(label: String, value: String, isEditing: Boolean, onValueChange: (String) -> Unit) {
+private fun EditTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    readOnly: Boolean = false
+) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(label, fontWeight = FontWeight.SemiBold)
-        if (isEditing) {
-            TextField(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier.fillMaxWidth(),
-                // Sesuaikan keyboard type jika perlu
-                keyboardOptions = if (label.contains("Cup")) KeyboardOptions(keyboardType = KeyboardType.Number) else KeyboardOptions.Default
-            )
-        } else {
-            Text(value, modifier = Modifier.padding(vertical = 8.dp))
-        }
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = label, style = MaterialTheme.typography.labelMedium)
+        Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            readOnly = readOnly,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color(0xFFE6F5E9),
+                unfocusedContainerColor = Color(0xFFE6F5E9),
+                disabledContainerColor = Color(0xFFF0F0F0),
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent
+            ),
+            shape = RoundedCornerShape(12.dp)
+        )
     }
 }

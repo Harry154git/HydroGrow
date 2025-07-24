@@ -1,5 +1,6 @@
 package com.pemrogamanmobile.hydrogrow.presentation.viewmodel.plantpage
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pemrogamanmobile.hydrogrow.domain.usecase.plant.PlantUseCase
@@ -13,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EditPlantViewModel @Inject constructor(
-    private val plantUseCase: PlantUseCase,
+    private val plantUseCase: PlantUseCase
 ) : ViewModel() {
 
     var uiState by mutableStateOf(EditPlantUiState())
@@ -30,7 +31,8 @@ class EditPlantViewModel @Inject constructor(
                             plantName = it.plantName,
                             harvestTime = it.harvestTime,
                             cupAmount = it.cupAmount.toString(),
-                            isLoading = false
+                            isLoading = false,
+                            newImageUri = null // Reset URI saat memuat data baru
                         )
                     } ?: run {
                         uiState = uiState.copy(isLoading = false, errorMessage = "Tanaman tidak ditemukan")
@@ -40,6 +42,11 @@ class EditPlantViewModel @Inject constructor(
                 uiState = uiState.copy(isLoading = false, errorMessage = e.message)
             }
         }
+    }
+
+    // ✅ DITAMBAHKAN: Fungsi untuk menerima URI gambar baru dari UI
+    fun onImageSelected(uri: Uri) {
+        uiState = uiState.copy(newImageUri = uri)
     }
 
     fun onPlantNameChange(newName: String) {
@@ -61,10 +68,18 @@ class EditPlantViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                // ✅ DIPERBARUI: Logika untuk mengunggah gambar baru jika ada
+                val imageUrl = if (uiState.newImageUri != null) {
+                    plantUseCase.uploadPlantImage(uiState.newImageUri!!)
+                } else {
+                    originalPlant.imageUrl // Gunakan URL lama jika tidak ada gambar baru
+                }
+
                 val updatedPlant = originalPlant.copy(
                     plantName = uiState.plantName,
                     harvestTime = uiState.harvestTime,
-                    cupAmount = uiState.cupAmount.toIntOrNull() ?: originalPlant.cupAmount
+                    cupAmount = uiState.cupAmount.toIntOrNull() ?: originalPlant.cupAmount,
+                    imageUrl = imageUrl // Set dengan URL baru atau lama
                 )
 
                 plantUseCase.updatePlant(updatedPlant)
@@ -80,7 +95,6 @@ class EditPlantViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                // ✅ DIPERBARUI: Tambahkan argumen gardenId yang diambil dari objek plant itu sendiri
                 plantUseCase.deletePlant(
                     plant = plantToDelete,
                     gardenId = plantToDelete.gardenOwnerId

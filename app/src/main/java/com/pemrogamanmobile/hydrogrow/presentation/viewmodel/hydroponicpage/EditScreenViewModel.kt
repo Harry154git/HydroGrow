@@ -36,7 +36,6 @@ class EditGardenViewModel @Inject constructor(
         }
     }
 
-    // Ubah parameter dari GardenUi menjadi Garden
     fun updateGarden(garden: Garden) {
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
@@ -51,7 +50,6 @@ class EditGardenViewModel @Inject constructor(
         }
     }
 
-    // Ubah parameter dari GardenUi menjadi Garden
     fun deleteGarden(garden: Garden) {
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
